@@ -283,7 +283,14 @@ Terminal 3:
 npm run dev
 ```
 
-If you are developing Floci core from source instead of Docker, start that repo however you normally do, as long as it is available on `http://localhost:4566`.
+If you are developing Floci core from source instead of Docker, you can use:
+
+```bash
+cd ../floci
+./mvnw clean quarkus:dev
+```
+
+As long as Floci is available on `http://localhost:4566`, either approach works.
 
 Open:
 
