@@ -24,6 +24,17 @@ function mockAdapter(cloud: 'aws' | 'azure'): CloudServiceAdapter {
             metadata: {},
         }),
         delete: async () => {},
+        listObjects: async (resourceId: string, prefix = '') => ({
+            prefix,
+            objects: [{
+                key: `${resourceId}/object.txt`,
+                name: 'object.txt',
+                type: 'object',
+                size: 12,
+                lastModified: null,
+                metadata: {},
+            }],
+        }),
     }
 }
 
@@ -79,5 +90,14 @@ describe('cloud schema routes', () => {
         expect(body.cloud).toBe('gcp')
         expect(body.adapterRegistered).toBe(false)
         expect(body.runtime).toBe('coming_soon')
+    })
+
+    test('lists storage objects through the cloud adapter', async () => {
+        const res = await appWithRoutes().request('/api/clouds/aws/services/storage/resources/demo/objects')
+        const body = await res.json()
+
+        expect(res.status).toBe(200)
+        expect(body.objects).toHaveLength(1)
+        expect(body.objects[0].name).toBe('object.txt')
     })
 })

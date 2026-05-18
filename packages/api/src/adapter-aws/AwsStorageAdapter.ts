@@ -1,7 +1,23 @@
-import {CreateBucketCommand, DeleteBucketCommand, ListBucketsCommand} from '@aws-sdk/client-s3'
+import {
+    CreateBucketCommand,
+    DeleteBucketCommand,
+    DeleteObjectCommand,
+    GetObjectCommand,
+    ListBucketsCommand,
+    ListObjectsV2Command,
+    PutObjectCommand,
+} from '@aws-sdk/client-s3'
 import {s3} from '../aws'
 import {awsStorageSchema} from '../cloud-spi/storageSchema'
-import type {CloudResource, CloudServiceAdapter, CreateResourceInput, ResourceQuery, ServiceSchema} from '../cloud-spi/types'
+import type {
+    CloudResource,
+    CloudServiceAdapter,
+    CreateResourceInput,
+    ResourceQuery,
+    ServiceSchema,
+    StorageObjectDownload,
+    StorageObjectList,
+} from '../cloud-spi/types'
 
 export class AwsStorageAdapter implements CloudServiceAdapter {
     readonly cloud = 'aws' as const
@@ -52,6 +68,58 @@ export class AwsStorageAdapter implements CloudServiceAdapter {
     async delete(id: string): Promise<void> {
         await s3.send(new DeleteBucketCommand({Bucket: id}))
     }
+
+    async listObjects(resourceId: string, prefix = ''): Promise<StorageObjectList> {
+        const res = await s3.send(new ListObjectsV2Command({
+            Bucket: resourceId,
+            Prefix: prefix || undefined,
+            Delimiter: '/',
+        }))
+
+        return {
+            prefix,
+            objects: [
+                ...(res.CommonPrefixes ?? []).map((item) => {
+                    const key = item.Prefix ?? ''
+                    return {
+                        key,
+                        name: objectName(key, prefix),
+                        type: 'folder' as const,
+                        size: null,
+                        lastModified: null,
+                        metadata: {},
+                    }
+                }),
+                ...(res.Contents ?? [])
+                    .filter((item) => item.Key && item.Key !== prefix)
+                    .map((item) => ({
+                        key: item.Key ?? '',
+                        name: objectName(item.Key ?? '', prefix),
+                        type: 'object' as const,
+                        size: item.Size ?? null,
+                        lastModified: item.LastModified?.toISOString() ?? null,
+                        metadata: {etag: item.ETag?.replace(/"/g, '')},
+                    })),
+            ],
+        }
+    }
+
+    async putObject(resourceId: string, key: string, body: Uint8Array, contentType: string): Promise<void> {
+        await s3.send(new PutObjectCommand({Bucket: resourceId, Key: key, Body: body, ContentType: contentType}))
+    }
+
+    async getObject(resourceId: string, key: string): Promise<StorageObjectDownload> {
+        const res = await s3.send(new GetObjectCommand({Bucket: resourceId, Key: key}))
+        return {
+            body: res.Body as BodyInit,
+            contentType: res.ContentType ?? 'application/octet-stream',
+            contentLength: res.ContentLength ?? null,
+        }
+    }
+
+    async deleteObject(resourceId: string, key: string): Promise<void> {
+        await s3.send(new DeleteObjectCommand({Bucket: resourceId, Key: key}))
+    }
 }
 
 function stringValue(value: unknown): string {
@@ -62,4 +130,9 @@ function filterBySearch(resources: CloudResource[], search?: string): CloudResou
     const normalized = search?.trim().toLowerCase()
     if (!normalized) return resources
     return resources.filter((resource) => resource.name.toLowerCase().includes(normalized))
+}
+
+function objectName(key: string, prefix: string): string {
+    const relative = key.startsWith(prefix) ? key.slice(prefix.length) : key
+    return relative.replace(/\/$/, '') || key
 }

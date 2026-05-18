@@ -64,6 +64,26 @@ export interface CloudResource {
     metadata: Record<string, unknown>
 }
 
+export interface StorageObject {
+    key: string
+    name: string
+    type: 'folder' | 'object'
+    size: number | null
+    lastModified: string | null
+    metadata: Record<string, unknown>
+}
+
+export interface StorageObjectList {
+    prefix: string
+    objects: StorageObject[]
+}
+
+export interface StorageObjectDownload {
+    body: BodyInit
+    contentType: string
+    contentLength: number | null
+}
+
 export interface ResourceQuery {
     search?: string
 }
@@ -80,4 +100,8 @@ export interface CloudServiceAdapter {
     get(id: string): Promise<CloudResource | null>
     create(input: CreateResourceInput): Promise<CloudResource>
     delete(id: string): Promise<void>
+    listObjects?(resourceId: string, prefix?: string): Promise<StorageObjectList>
+    putObject?(resourceId: string, key: string, body: Uint8Array, contentType: string): Promise<void>
+    getObject?(resourceId: string, key: string): Promise<StorageObjectDownload>
+    deleteObject?(resourceId: string, key: string): Promise<void>
 }

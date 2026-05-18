@@ -1,5 +1,13 @@
 import {azureStorageSchema} from '../cloud-spi/storageSchema'
-import type {CloudResource, CloudServiceAdapter, CreateResourceInput, ResourceQuery, ServiceSchema} from '../cloud-spi/types'
+import type {
+    CloudResource,
+    CloudServiceAdapter,
+    CreateResourceInput,
+    ResourceQuery,
+    ServiceSchema,
+    StorageObjectDownload,
+    StorageObjectList,
+} from '../cloud-spi/types'
 
 export interface AzureEndpointProperties {
     endpoint: string
@@ -40,6 +48,41 @@ export class AzureStorageAdapter implements CloudServiceAdapter {
         await this.azureFetch(`/${encodeURIComponent(id)}?restype=container`, {method: 'DELETE'})
     }
 
+    async listObjects(resourceId: string, prefix = ''): Promise<StorageObjectList> {
+        const qs = new URLSearchParams({restype: 'container', comp: 'list', delimiter: '/'})
+        if (prefix) qs.set('prefix', prefix)
+        const res = await this.azureFetch(`/${encodeURIComponent(resourceId)}?${qs}`, {method: 'GET'}, {emptyOnNotFound: true})
+        if (!res) return {prefix, objects: []}
+
+        const xml = await res.text()
+        return {prefix, objects: parseBlobs(xml, prefix)}
+    }
+
+    async putObject(resourceId: string, key: string, body: Uint8Array, contentType: string): Promise<void> {
+        await this.azureFetch(`/${encodeURIComponent(resourceId)}/${encodePath(key)}`, {
+            method: 'PUT',
+            body: copyBytes(body),
+            headers: {
+                'content-type': contentType,
+                'x-ms-blob-type': 'BlockBlob',
+            },
+        })
+    }
+
+    async getObject(resourceId: string, key: string): Promise<StorageObjectDownload> {
+        const res = await this.azureFetch(`/${encodeURIComponent(resourceId)}/${encodePath(key)}`, {method: 'GET'})
+        if (!res) throw new Error('Azure blob not found')
+        return {
+            body: await res.arrayBuffer(),
+            contentType: res.headers.get('content-type') ?? 'application/octet-stream',
+            contentLength: numberHeader(res.headers.get('content-length')),
+        }
+    }
+
+    async deleteObject(resourceId: string, key: string): Promise<void> {
+        await this.azureFetch(`/${encodeURIComponent(resourceId)}/${encodePath(key)}`, {method: 'DELETE'})
+    }
+
     private async azureFetch(path: string, init: RequestInit, options: {emptyOnNotFound?: boolean} = {}): Promise<Response | null> {
         const res = await fetch(`${this.props.endpoint}${path}`, {
             ...init,
@@ -62,6 +105,34 @@ export class AzureStorageAdapter implements CloudServiceAdapter {
 function parseContainers(xml: string): CloudResource[] {
     const matches = xml.matchAll(/<Container>\s*<Name>([^<]+)<\/Name>[\s\S]*?(?:<Last-Modified>([^<]+)<\/Last-Modified>)?[\s\S]*?<\/Container>/g)
     return [...matches].map((match) => normalizeContainer(decodeXml(match[1]), match[2] ? decodeXml(match[2]) : null))
+}
+
+function parseBlobs(xml: string, prefix: string) {
+    const prefixes = [...xml.matchAll(/<BlobPrefix>\s*<Name>([^<]+)<\/Name>\s*<\/BlobPrefix>/g)].map((match) => {
+        const key = decodeXml(match[1])
+        return {
+            key,
+            name: objectName(key, prefix),
+            type: 'folder' as const,
+            size: null,
+            lastModified: null,
+            metadata: {},
+        }
+    })
+
+    const blobs = [...xml.matchAll(/<Blob>\s*<Name>([^<]+)<\/Name>[\s\S]*?(?:<Last-Modified>([^<]+)<\/Last-Modified>)?[\s\S]*?(?:<Content-Length>([^<]+)<\/Content-Length>)?[\s\S]*?<\/Blob>/g)].map((match) => {
+        const key = decodeXml(match[1])
+        return {
+            key,
+            name: objectName(key, prefix),
+            type: 'object' as const,
+            size: match[3] ? Number(match[3]) : null,
+            lastModified: match[2] ? decodeXml(match[2]) : null,
+            metadata: {},
+        }
+    })
+
+    return [...prefixes, ...blobs]
 }
 
 function normalizeContainer(name: string, createdAt: string | null): CloudResource {
@@ -94,4 +165,25 @@ function decodeXml(value: string): string {
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&amp;/g, '&')
+}
+
+function objectName(key: string, prefix: string): string {
+    const relative = key.startsWith(prefix) ? key.slice(prefix.length) : key
+    return relative.replace(/\/$/, '') || key
+}
+
+function encodePath(key: string): string {
+    return key.split('/').map(encodeURIComponent).join('/')
+}
+
+function numberHeader(value: string | null): number | null {
+    if (!value) return null
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+}
+
+function copyBytes(bytes: Uint8Array): ArrayBuffer {
+    const copy = new Uint8Array(bytes.byteLength)
+    copy.set(bytes)
+    return copy.buffer
 }

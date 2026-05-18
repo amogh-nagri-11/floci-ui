@@ -8,6 +8,8 @@ import type {
     CreateResourceInput,
     ResourceQuery,
     ServiceSchema,
+    StorageObjectDownload,
+    StorageObjectList,
 } from '../cloud-spi/types'
 import {storageSchemaFor} from '../cloud-spi/storageSchema'
 import {CloudAdapterRegistry} from '../registry/CloudAdapterRegistry'
@@ -91,6 +93,30 @@ export class CloudProxyService {
 
     async deleteResource(cloud: CloudProvider, service: CloudServiceType, id: string): Promise<void> {
         await this.requireAdapter(cloud, service).delete(id)
+    }
+
+    async listObjects(cloud: CloudProvider, service: CloudServiceType, resourceId: string, prefix?: string): Promise<StorageObjectList> {
+        const adapter = this.requireAdapter(cloud, service)
+        if (!adapter.listObjects) throw new Error(`Object listing is not supported for ${cloud}/${service}`)
+        return adapter.listObjects(resourceId, prefix)
+    }
+
+    async putObject(cloud: CloudProvider, service: CloudServiceType, resourceId: string, key: string, body: Uint8Array, contentType: string): Promise<void> {
+        const adapter = this.requireAdapter(cloud, service)
+        if (!adapter.putObject) throw new Error(`Object upload is not supported for ${cloud}/${service}`)
+        await adapter.putObject(resourceId, key, body, contentType)
+    }
+
+    async getObject(cloud: CloudProvider, service: CloudServiceType, resourceId: string, key: string): Promise<StorageObjectDownload> {
+        const adapter = this.requireAdapter(cloud, service)
+        if (!adapter.getObject) throw new Error(`Object download is not supported for ${cloud}/${service}`)
+        return adapter.getObject(resourceId, key)
+    }
+
+    async deleteObject(cloud: CloudProvider, service: CloudServiceType, resourceId: string, key: string): Promise<void> {
+        const adapter = this.requireAdapter(cloud, service)
+        if (!adapter.deleteObject) throw new Error(`Object delete is not supported for ${cloud}/${service}`)
+        await adapter.deleteObject(resourceId, key)
     }
 
     private requireAdapter(cloud: CloudProvider, service: CloudServiceType) {

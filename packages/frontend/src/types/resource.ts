@@ -10,3 +10,17 @@ export interface CloudResource {
     createdAt: string | null
     metadata: Record<string, unknown>
 }
+
+export interface StorageObject {
+    key: string
+    name: string
+    type: 'folder' | 'object'
+    size: number | null
+    lastModified: string | null
+    metadata: Record<string, unknown>
+}
+
+export interface StorageObjectList {
+    prefix: string
+    objects: StorageObject[]
+}

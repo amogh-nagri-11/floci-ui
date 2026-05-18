@@ -52,6 +52,56 @@ export function createCloudRoutes(service: CloudProxyService = createCloudProxyS
         return c.json(resource)
     })
 
+    app.get('/:cloud/services/:service/resources/:id/objects', async (c) => {
+        const cloud = c.req.param('cloud') as CloudProvider
+        const serviceType = c.req.param('service') as CloudServiceType
+        if (!isCloudProvider(cloud) || !isServiceType(serviceType)) return c.json({error: 'Unknown cloud or service'}, 404)
+
+        const objects = await service.listObjects(cloud, serviceType, c.req.param('id'), c.req.query('prefix') ?? '')
+        return c.json(objects)
+    })
+
+    app.put('/:cloud/services/:service/resources/:id/object', async (c) => {
+        const cloud = c.req.param('cloud') as CloudProvider
+        const serviceType = c.req.param('service') as CloudServiceType
+        if (!isCloudProvider(cloud) || !isServiceType(serviceType)) return c.json({error: 'Unknown cloud or service'}, 404)
+
+        const key = c.req.query('key') ?? ''
+        if (!key) return c.json({error: 'Object key is required'}, 400)
+        const body = new Uint8Array(await c.req.arrayBuffer())
+        const contentType = c.req.header('content-type') ?? 'application/octet-stream'
+        await service.putObject(cloud, serviceType, c.req.param('id'), key, body, contentType)
+        return c.json({ok: true})
+    })
+
+    app.get('/:cloud/services/:service/resources/:id/object', async (c) => {
+        const cloud = c.req.param('cloud') as CloudProvider
+        const serviceType = c.req.param('service') as CloudServiceType
+        if (!isCloudProvider(cloud) || !isServiceType(serviceType)) return c.json({error: 'Unknown cloud or service'}, 404)
+
+        const key = c.req.query('key') ?? ''
+        if (!key) return c.json({error: 'Object key is required'}, 400)
+        const object = await service.getObject(cloud, serviceType, c.req.param('id'), key)
+        return new Response(object.body, {
+            headers: {
+                'content-type': object.contentType,
+                ...(object.contentLength === null ? {} : {'content-length': String(object.contentLength)}),
+                'content-disposition': `attachment; filename="${key.split('/').pop() ?? key}"`,
+            },
+        })
+    })
+
+    app.delete('/:cloud/services/:service/resources/:id/object', async (c) => {
+        const cloud = c.req.param('cloud') as CloudProvider
+        const serviceType = c.req.param('service') as CloudServiceType
+        if (!isCloudProvider(cloud) || !isServiceType(serviceType)) return c.json({error: 'Unknown cloud or service'}, 404)
+
+        const key = c.req.query('key') ?? ''
+        if (!key) return c.json({error: 'Object key is required'}, 400)
+        await service.deleteObject(cloud, serviceType, c.req.param('id'), key)
+        return c.json({ok: true})
+    })
+
     app.post('/:cloud/services/:service/resources', async (c) => {
         const cloud = c.req.param('cloud') as CloudProvider
         const serviceType = c.req.param('service') as CloudServiceType

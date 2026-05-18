@@ -1107,6 +1107,72 @@ pre,
     overflow: auto;
 }
 
+.object-browser {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--elevated);
+    overflow: hidden;
+}
+
+.object-browser-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 14px;
+}
+
+.object-browser-header h3 {
+    margin: 2px 0 4px;
+    color: var(--text-bright);
+    font-size: 13px;
+}
+
+.object-browser-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.object-prefix-input {
+    min-width: 180px;
+}
+
+.object-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    color: var(--text-3);
+    font-size: 11px;
+}
+
+.object-breadcrumb span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.object-breadcrumb button {
+    border: 0;
+    background: transparent;
+    color: var(--link);
+    padding: 0;
+    font-size: 11px;
+}
+
+.object-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.object-table td:first-child {
+    cursor: pointer;
+}
+
 .cloud-coming-soon {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 1.3fr;

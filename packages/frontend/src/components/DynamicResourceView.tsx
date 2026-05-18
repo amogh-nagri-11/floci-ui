@@ -11,6 +11,7 @@ import {
 import {DynamicFormRenderer} from '@/components/DynamicFormRenderer'
 import {ResourceInspector} from '@/components/ResourceInspector'
 import {ResourceTable} from '@/components/ResourceTable'
+import {StorageObjectBrowser} from '@/components/StorageObjectBrowser'
 import type {CloudProvider, CloudServiceType} from '@/types/cloud'
 import type {CloudResource} from '@/types/resource'
 
@@ -149,6 +150,7 @@ export function DynamicResourceView({cloud, service}: DynamicResourceViewProps) 
                 </section>
                 <ResourceInspector resource={selected}/>
             </div>
+            <StorageObjectBrowser cloud={cloud} resource={selected}/>
         </div>
     )
 }
