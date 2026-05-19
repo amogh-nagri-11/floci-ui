@@ -13,6 +13,7 @@ import type {
 } from '../cloud-spi/types'
 import {storageSchemaFor} from '../cloud-spi/storageSchema'
 import {CloudAdapterRegistry} from '../registry/CloudAdapterRegistry'
+import {serverlessSchemaFor} from '../cloud-spi/serverlessSchema'
 import {azureEndpoint} from '../azure'
 
 export class CloudProxyService {
@@ -28,7 +29,9 @@ export class CloudProxyService {
 
     services(cloud: CloudProvider): CloudServiceDescriptor[] {
         if (cloud === 'gcp') {
-            return [{cloud, service: 'storage', displayName: 'Storage Coming Soon', availability: 'coming_soon'}]
+            return [{cloud, service: 'storage', displayName: 'Storage Coming Soon', availability: 'coming_soon'},
+                  {cloud, service: 'serverless', displayName: 'Cloud Functions', availability: 'coming_soon'},
+            ]
         }
 
         return [{
@@ -36,14 +39,27 @@ export class CloudProxyService {
             service: 'storage',
             displayName: cloud === 'aws' ? 'S3 Storage' : 'Azure Blob Storage',
             availability: this.registry.get(cloud, 'storage') ? 'available' : 'coming_soon',
-        }]
+        },
+        {
+        cloud,
+        service: 'serverless',
+        displayName: cloud === 'aws' ? 'AWS Lambda' : 'Azure Functions',
+        availability: 'available',
+    },
+]
     }
 
     schema(cloud: CloudProvider, service: CloudServiceType): ServiceSchema | null {
-        const adapter = this.registry.get(cloud, service)
-        if (adapter) return adapter.schema()
-        return storageSchemaFor(cloud)
+    const adapter = this.registry.get(cloud, service)
+
+    if (adapter) return adapter.schema()
+
+    if (service === 'serverless') {
+        return serverlessSchemaFor(cloud)
     }
+
+    return storageSchemaFor(cloud)
+}
 
     async status(cloud: CloudProvider): Promise<CloudStatus> {
         const adapter = this.registry.get(cloud, 'storage')

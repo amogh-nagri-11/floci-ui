@@ -1,6 +1,6 @@
 export type CloudProvider = 'aws' | 'azure' | 'gcp'
 
-export type CloudServiceType = 'storage'
+export type CloudServiceType = 'storage' | 'serverless'
 
 export type CloudAvailability = 'available' | 'coming_soon'
 
