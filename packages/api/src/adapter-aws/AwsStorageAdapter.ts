@@ -37,7 +37,10 @@ export class AwsStorageAdapter implements CloudServiceAdapter {
             type: 'bucket',
             region: null,
             createdAt: bucket.CreationDate?.toISOString() ?? null,
-            metadata: {},
+            metadata: {
+                provider: 'aws',
+                storageService: 's3',
+            },
         }))
 
         return filterBySearch(resources, query.search)
@@ -64,7 +67,10 @@ export class AwsStorageAdapter implements CloudServiceAdapter {
             type: 'bucket',
             region: stringValue(input.values.region) || null,
             createdAt: null,
-            metadata: {},
+            metadata: {
+                provider: 'aws',
+                storageService: 's3',
+            },
         }
     }
 
@@ -90,7 +96,11 @@ export class AwsStorageAdapter implements CloudServiceAdapter {
                         type: 'folder' as const,
                         size: null,
                         lastModified: null,
-                        metadata: {},
+                        metadata: {
+                            provider: 'aws',
+                            storageService: 's3',
+                            prefix: key,
+                        },
                     }
                 }),
                 ...(res.Contents ?? [])
@@ -101,7 +111,12 @@ export class AwsStorageAdapter implements CloudServiceAdapter {
                         type: 'object' as const,
                         size: item.Size ?? null,
                         lastModified: item.LastModified?.toISOString() ?? null,
-                        metadata: {etag: item.ETag?.replace(/"/g, '')},
+                        metadata: {
+                            provider: 'aws',
+                            storageService: 's3',
+                            etag: item.ETag?.replace(/"/g, ''),
+                            storageClass: item.StorageClass,
+                        },
                     })),
             ],
         }

@@ -59,6 +59,13 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
     })
 
     useEffect(() => {
+        setSelected(undefined)
+        setSelectedObject(undefined)
+        setCreateOpen(false)
+        setSearch('')
+    }, [cloud, service])
+
+    useEffect(() => {
         setSelectedObject(undefined)
     }, [selected?.id])
 
@@ -86,6 +93,8 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
 
     const schema = schemaQuery.data
     const resources = resourcesQuery.data ?? []
+    const activeSelected = selected?.cloud === cloud && selected.service === service ? selected : undefined
+    const createResourceLabel = resourceCreateLabel(schema)
     const runtimeState = statusLoading
         ? 'Checking runtime'
         : cloudStatus?.runtime === 'reachable'
@@ -134,7 +143,7 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
                                 <input className="input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Filter resources"/>
                                 <button className="button" type="button" disabled={!canUseRuntime} onClick={() => setCreateOpen((open) => !open)}>
                                     <Plus size={14}/>
-                                    Create
+                                    {createResourceLabel}
                                     {createOpen ? <ChevronUp size={13}/> : <ChevronDown size={13}/>}
                                 </button>
                                 <button className="button" type="button" disabled={!canUseRuntime || resourcesQuery.isFetching} onClick={() => resourcesQuery.refetch()}>
@@ -148,6 +157,8 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
                                 <DynamicFormRenderer
                                     schema={schema}
                                     isSubmitting={createMut.isPending}
+                                    submitLabel={createResourceLabel}
+                                    pendingLabel="Creating"
                                     submitError={createMut.error instanceof Error ? createMut.error.message : null}
                                     onSubmit={(values) => createMut.mutate(values)}
                                 />
@@ -156,7 +167,7 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
                         {renderResourceSurface({
                             schema,
                             resources,
-                            selectedId: selected?.id,
+                            selectedId: activeSelected?.id,
                             deletingId: deleteMut.variables?.id,
                             cloudStatus,
                             statusLoading,
@@ -167,11 +178,23 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
                         })}
                     </section>
                 </section>
-                <ResourceInspector resource={selected} object={selectedObject}/>
+                <ResourceInspector resource={activeSelected} object={selectedObject}/>
             </div>
-            <StorageObjectBrowser cloud={cloud} resource={selected} selectedObjectKey={selectedObject?.key} onSelectObject={setSelectedObject}/>
+            <StorageObjectBrowser
+                cloud={cloud}
+                resource={activeSelected}
+                capabilities={schema.capabilities?.objectActions}
+                selectedObjectKey={selectedObject?.key}
+                onSelectObject={setSelectedObject}
+            />
         </div>
     )
+}
+
+function resourceCreateLabel(schema: ServiceSchema): string {
+    if (schema.cloud === 'aws' && schema.service === 'storage') return 'Create bucket'
+    if (schema.cloud === 'azure' && schema.service === 'storage') return 'Create container'
+    return 'Create resource'
 }
 
 function FeatureTile({icon, title, value, detail}: {icon: ElementType; title: string; value: string; detail: string}) {

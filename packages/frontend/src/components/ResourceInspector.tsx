@@ -30,7 +30,7 @@ export function ResourceInspector({resource, object}: ResourceInspectorProps) {
                     <InspectorItem label="Size" value={object.size === null ? '-' : formatBytes(object.size)}/>
                     <InspectorItem label="Last Modified" value={object.lastModified ?? '-'}/>
                 </div>
-                <pre className="metadata-block">{JSON.stringify(object.metadata, null, 2)}</pre>
+                <MetadataPanel metadata={object.metadata}/>
             </aside>
         )
     }
@@ -47,7 +47,7 @@ export function ResourceInspector({resource, object}: ResourceInspectorProps) {
                 <InspectorItem label="Region" value={resource.region ?? '-'}/>
                 <InspectorItem label="Created At" value={resource.createdAt ?? '-'}/>
             </div>
-            <pre className="metadata-block">{JSON.stringify(resource.metadata, null, 2)}</pre>
+            <MetadataPanel metadata={resource.metadata}/>
         </aside>
     )
 }
@@ -59,6 +59,36 @@ function InspectorItem({label, value}: {label: string; value: string}) {
             <p className="metric-value mono">{value}</p>
         </div>
     )
+}
+
+function MetadataPanel({metadata}: {metadata: Record<string, unknown>}) {
+    const rows = Object.entries(metadata).filter(([, value]) => value !== undefined && value !== null && value !== '')
+
+    if (rows.length === 0) {
+        return (
+            <div className="metadata-block empty-metadata">
+                <span>No metadata returned</span>
+            </div>
+        )
+    }
+
+    return (
+        <div className="metadata-block metadata-table">
+            {rows.map(([key, value]) => (
+                <div key={key}>
+                    <span>{humanizeKey(key)}</span>
+                    <code>{String(value)}</code>
+                </div>
+            ))}
+        </div>
+    )
+}
+
+function humanizeKey(value: string): string {
+    return value
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
 function formatBytes(bytes: number): string {

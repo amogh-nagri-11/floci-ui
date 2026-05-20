@@ -1228,6 +1228,36 @@ pre,
     overflow: auto;
 }
 
+.metadata-table {
+    display: grid;
+    gap: 8px;
+}
+
+.metadata-table div {
+    display: grid;
+    grid-template-columns: minmax(88px, 0.42fr) minmax(0, 1fr);
+    gap: 10px;
+    align-items: baseline;
+}
+
+.metadata-table span,
+.empty-metadata span {
+    color: var(--text-3);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.metadata-table code {
+    overflow: hidden;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .object-browser {
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -1250,11 +1280,48 @@ pre,
     font-size: 13px;
 }
 
+.object-browser-subtitle {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-3);
+    font-size: 11px;
+}
+
+.object-browser-subtitle > span {
+    border-left: 1px solid var(--border);
+    padding-left: 8px;
+}
+
 .object-browser-actions {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 8px;
+}
+
+.object-create-folder {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) auto;
+    gap: 10px;
+    align-items: end;
+    border-bottom: 1px solid var(--border);
+    background: var(--raised);
+    padding: 10px 14px;
+}
+
+.object-create-folder label {
+    display: grid;
+    gap: 6px;
+}
+
+.object-create-folder span {
+    color: var(--text-2);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
 
 .object-prefix-input {
@@ -1288,6 +1355,7 @@ pre,
     display: inline-flex;
     align-items: center;
     gap: 7px;
+    min-width: 0;
 }
 
 .object-table td:first-child {

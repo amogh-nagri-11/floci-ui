@@ -56,6 +56,10 @@ export interface ServiceSchema {
     displayName: string
     fields: FieldSchema[]
     actions: ActionSchema[]
+    capabilities?: {
+        resourceActions?: Array<'list' | 'create' | 'delete' | 'inspect'>
+        objectActions?: Array<'list' | 'upload' | 'download' | 'delete' | 'createFolder'>
+    }
     filters: FieldSchema[]
     columns: TableColumnSchema[]
 }

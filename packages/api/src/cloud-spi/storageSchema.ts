@@ -43,6 +43,10 @@ export function awsStorageSchema(): ServiceSchema {
             },
         ],
         actions: ['list', 'create', 'delete', 'inspect'],
+        capabilities: {
+            resourceActions: ['list', 'create', 'delete', 'inspect'],
+            objectActions: ['list', 'upload', 'download', 'delete', 'createFolder'],
+        },
         filters: storageFilters,
         columns: storageColumns,
     }
@@ -69,6 +73,10 @@ export function azureStorageSchema(): ServiceSchema {
             },
         ],
         actions: ['list', 'create', 'delete', 'inspect'],
+        capabilities: {
+            resourceActions: ['list', 'create', 'delete', 'inspect'],
+            objectActions: ['list', 'upload', 'download', 'delete', 'createFolder'],
+        },
         filters: storageFilters,
         columns: storageColumns,
     }

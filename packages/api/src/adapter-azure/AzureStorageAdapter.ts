@@ -6,9 +6,12 @@ import type {
     CreateResourceInput,
     ResourceQuery,
     ServiceSchema,
+    StorageObject,
     StorageObjectDownload,
     StorageObjectList,
 } from '../cloud-spi/types'
+
+const FOLDER_MARKER = '.floci-folder'
 
 export class AzureStorageAdapter implements CloudServiceAdapter {
     readonly cloud = 'azure' as const
@@ -21,7 +24,7 @@ export class AzureStorageAdapter implements CloudServiceAdapter {
     }
 
     async list(query: ResourceQuery = {}): Promise<CloudResource[]> {
-        const res = await this.client.fetch('/?comp=list', {method: 'GET'}, {emptyOnNotFound: true})
+        const res = await this.client.fetch(`${accountPath(this.client)}?comp=list`, {method: 'GET'}, {emptyOnNotFound: true})
         if (!res) return []
 
         const xml = await res.text()
@@ -40,18 +43,18 @@ export class AzureStorageAdapter implements CloudServiceAdapter {
             throw new Error('Use a valid Azure container name: 3-63 lowercase letters, numbers, or single hyphens.')
         }
 
-        await this.client.fetch(`/${encodeURIComponent(containerName)}?restype=container`, {method: 'PUT'})
+        await this.client.fetch(`${containerPath(this.client, containerName)}?restype=container`, {method: 'PUT'})
         return normalizeContainer(containerName, null)
     }
 
     async delete(id: string): Promise<void> {
-        await this.client.fetch(`/${encodeURIComponent(id)}?restype=container`, {method: 'DELETE'})
+        await this.client.fetch(`${containerPath(this.client, id)}?restype=container`, {method: 'DELETE'})
     }
 
     async listObjects(resourceId: string, prefix = ''): Promise<StorageObjectList> {
         const qs = new URLSearchParams({restype: 'container', comp: 'list', delimiter: '/'})
         if (prefix) qs.set('prefix', prefix)
-        const res = await this.client.fetch(`/${encodeURIComponent(resourceId)}?${qs}`, {method: 'GET'}, {emptyOnNotFound: true})
+        const res = await this.client.fetch(`${containerPath(this.client, resourceId)}?${qs}`, {method: 'GET'}, {emptyOnNotFound: true})
         if (!res) return {prefix, objects: []}
 
         const xml = await res.text()
@@ -59,7 +62,8 @@ export class AzureStorageAdapter implements CloudServiceAdapter {
     }
 
     async putObject(resourceId: string, key: string, body: Uint8Array, contentType: string): Promise<void> {
-        await this.client.fetch(`/${encodeURIComponent(resourceId)}/${encodePath(key)}`, {
+        const blobKey = azureBlobKey(key, contentType)
+        await this.client.fetch(`${containerPath(this.client, resourceId)}/${encodePath(blobKey)}`, {
             method: 'PUT',
             body: copyBytes(body),
             headers: {
@@ -70,7 +74,7 @@ export class AzureStorageAdapter implements CloudServiceAdapter {
     }
 
     async getObject(resourceId: string, key: string): Promise<StorageObjectDownload> {
-        const res = await this.client.fetch(`/${encodeURIComponent(resourceId)}/${encodePath(key)}`, {method: 'GET'})
+        const res = await this.client.fetch(`${containerPath(this.client, resourceId)}/${encodePath(key)}`, {method: 'GET'})
         if (!res) throw new Error('Azure blob not found')
         return {
             body: await res.arrayBuffer(),
@@ -80,8 +84,16 @@ export class AzureStorageAdapter implements CloudServiceAdapter {
     }
 
     async deleteObject(resourceId: string, key: string): Promise<void> {
-        await this.client.fetch(`/${encodeURIComponent(resourceId)}/${encodePath(key)}`, {method: 'DELETE'})
+        await this.client.fetch(`${containerPath(this.client, resourceId)}/${encodePath(key)}`, {method: 'DELETE'})
     }
+}
+
+function accountPath(client: AzureRuntimeClient): string {
+    return `/${encodeURIComponent(client.accountName)}`
+}
+
+function containerPath(client: AzureRuntimeClient, containerName: string): string {
+    return `${accountPath(client)}/${encodeURIComponent(containerName)}`
 }
 
 function parseContainers(xml: string): CloudResource[] {
@@ -90,29 +102,65 @@ function parseContainers(xml: string): CloudResource[] {
 }
 
 function parseBlobs(xml: string, prefix: string) {
-    const prefixes = [...xml.matchAll(/<BlobPrefix>\s*<Name>([^<]+)<\/Name>\s*<\/BlobPrefix>/g)].map((match) => {
+    const folderKeys = new Set<string>()
+    const prefixes: StorageObject[] = [...xml.matchAll(/<BlobPrefix>\s*<Name>([^<]+)<\/Name>\s*<\/BlobPrefix>/g)].map((match) => {
         const key = decodeXml(match[1])
+        folderKeys.add(key)
         return {
             key,
             name: objectName(key, prefix),
             type: 'folder' as const,
             size: null,
             lastModified: null,
-            metadata: {},
+            metadata: {
+                provider: 'azure',
+                storageService: 'blob',
+                prefix: key,
+            },
         }
     })
 
-    const blobs = [...xml.matchAll(/<Blob>\s*<Name>([^<]+)<\/Name>[\s\S]*?(?:<Last-Modified>([^<]+)<\/Last-Modified>)?[\s\S]*?(?:<Content-Length>([^<]+)<\/Content-Length>)?[\s\S]*?<\/Blob>/g)].map((match) => {
+    const blobs: StorageObject[] = []
+    for (const match of xml.matchAll(/<Blob>\s*<Name>([^<]+)<\/Name>[\s\S]*?(?:<Last-Modified>([^<]+)<\/Last-Modified>)?[\s\S]*?(?:<Content-Length>([^<]+)<\/Content-Length>)?[\s\S]*?<\/Blob>/g)) {
         const key = decodeXml(match[1])
-        return {
+        const markerFolderKey = markerFolderPrefix(key)
+        if (markerFolderKey) {
+            if (!folderKeys.has(markerFolderKey)) {
+                folderKeys.add(markerFolderKey)
+                prefixes.push({
+                    key: markerFolderKey,
+                    name: objectName(markerFolderKey, prefix),
+                    type: 'folder' as const,
+                    size: null,
+                    lastModified: match[2] ? decodeXml(match[2]) : null,
+                    metadata: {
+                        provider: 'azure',
+                        storageService: 'blob',
+                        prefix: markerFolderKey,
+                        marker: FOLDER_MARKER,
+                    },
+                })
+            }
+            continue
+        }
+
+        const blobXml = match[0]
+        blobs.push({
             key,
             name: objectName(key, prefix),
             type: 'object' as const,
             size: match[3] ? Number(match[3]) : null,
             lastModified: match[2] ? decodeXml(match[2]) : null,
-            metadata: {},
-        }
-    })
+            metadata: {
+                provider: 'azure',
+                storageService: 'blob',
+                etag: xmlValue(blobXml, 'Etag') ?? xmlValue(blobXml, 'ETag'),
+                contentType: xmlValue(blobXml, 'Content-Type'),
+                blobType: xmlValue(blobXml, 'BlobType'),
+                accessTier: xmlValue(blobXml, 'AccessTier'),
+            },
+        })
+    }
 
     return [...prefixes, ...blobs]
 }
@@ -126,7 +174,10 @@ function normalizeContainer(name: string, createdAt: string | null): CloudResour
         type: 'container',
         region: null,
         createdAt,
-        metadata: {},
+        metadata: {
+            provider: 'azure',
+            storageService: 'blob',
+        },
     }
 }
 
@@ -149,6 +200,15 @@ function decodeXml(value: string): string {
         .replace(/&amp;/g, '&')
 }
 
+function xmlValue(xml: string, tagName: string): string | undefined {
+    const match = xml.match(new RegExp(`<${escapeRegExp(tagName)}>([^<]+)<\\/${escapeRegExp(tagName)}>`, 'i'))
+    return match?.[1] ? decodeXml(match[1]) : undefined
+}
+
+function escapeRegExp(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 function objectName(key: string, prefix: string): string {
     const relative = key.startsWith(prefix) ? key.slice(prefix.length) : key
     return relative.replace(/\/$/, '') || key
@@ -168,6 +228,16 @@ function copyBytes(bytes: Uint8Array): ArrayBuffer {
     const copy = new Uint8Array(bytes.byteLength)
     copy.set(bytes)
     return copy.buffer
+}
+
+function azureBlobKey(key: string, contentType: string): string {
+    if (key.endsWith('/') && contentType === 'application/x-directory') return `${key}${FOLDER_MARKER}`
+    return key
+}
+
+function markerFolderPrefix(key: string): string | null {
+    if (!key.endsWith(`/${FOLDER_MARKER}`)) return null
+    return key.slice(0, -FOLDER_MARKER.length)
 }
 
 function isValidContainerName(value: string): boolean {

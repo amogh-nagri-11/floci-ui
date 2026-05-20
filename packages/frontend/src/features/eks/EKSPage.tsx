@@ -157,7 +157,7 @@ function NodegroupTable({ nodegroups }: { nodegroups: EksNodegroup[] }) {
 
 export function EKSPage() {
   const clustersQuery = useEksClustersQuery();
-  const clusters = clustersQuery.data ?? [];
+  const clusters = useMemo(() => clustersQuery.data ?? [], [clustersQuery.data]);
   const [selectedClusterName, setSelectedClusterName] = useState<string | null>(null);
 
   useEffect(() => {
@@ -272,4 +272,3 @@ export function EKSPage() {
     </>
   );
 }
-

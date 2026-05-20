@@ -186,7 +186,7 @@ function NetworkTable({ instance }: { instance: RdsInstance }) {
 
 export function RDSPage() {
   const instancesQuery = useRdsInstancesQuery();
-  const instances = instancesQuery.data ?? [];
+  const instances = useMemo(() => instancesQuery.data ?? [], [instancesQuery.data]);
   const [selectedIdentifier, setSelectedIdentifier] = useState<string | null>(null);
 
   useEffect(() => {

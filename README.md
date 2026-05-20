@@ -368,7 +368,8 @@ curl http://localhost:4566/_floci/health
 ```
 
 For Azure Blob Storage exploration, also run Floci-AZ and expose it at `FLOCI_AZURE_ENDPOINT`
-(`http://localhost:4577` by default).
+(`http://localhost:4577` by default). Floci-AZ routes Blob Storage requests under an Azure account path;
+the local default is `FLOCI_AZURE_ACCOUNT_NAME=devstoreaccount1`.
 
 For local development, the UI needs all three of these components running:
 
@@ -395,6 +396,7 @@ Default `.env` values:
 ```bash
 FLOCI_ENDPOINT=http://localhost:4566
 FLOCI_AZURE_ENDPOINT=http://localhost:4577
+FLOCI_AZURE_ACCOUNT_NAME=devstoreaccount1
 VITE_MOCK_MODE=false
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=test
@@ -433,6 +435,7 @@ http://127.0.0.1:3000/
 ```bash
 FLOCI_ENDPOINT=http://localhost:4566
 FLOCI_AZURE_ENDPOINT=http://localhost:4577
+FLOCI_AZURE_ACCOUNT_NAME=devstoreaccount1
 VITE_MOCK_MODE=false
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=test

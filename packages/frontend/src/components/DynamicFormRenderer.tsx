@@ -5,11 +5,13 @@ import type {FieldSchema, ServiceSchema} from '@/types/schema'
 interface DynamicFormRendererProps {
     schema: ServiceSchema
     isSubmitting: boolean
+    submitLabel?: string
+    pendingLabel?: string
     submitError?: string | null
     onSubmit: (values: Record<string, unknown>) => void
 }
 
-export function DynamicFormRenderer({schema, isSubmitting, submitError, onSubmit}: DynamicFormRendererProps) {
+export function DynamicFormRenderer({schema, isSubmitting, submitLabel = 'Create', pendingLabel = 'Creating', submitError, onSubmit}: DynamicFormRendererProps) {
     const [values, setValues] = useState<Record<string, string>>({})
     const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -53,7 +55,7 @@ export function DynamicFormRenderer({schema, isSubmitting, submitError, onSubmit
             ))}
             <button className="button primary" type="submit" disabled={isSubmitting}>
                 <Plus size={14}/>
-                {isSubmitting ? 'Creating' : 'Create'}
+                {isSubmitting ? pendingLabel : submitLabel}
             </button>
             {submitError && <div className="form-error">{submitError}</div>}
         </form>

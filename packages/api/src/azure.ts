@@ -4,20 +4,29 @@ export interface AzureRuntimeFetchOptions {
 
 export interface AzureRuntimeClient {
     readonly endpoint: string
+    readonly accountName: string
     fetch(path: string, init: RequestInit, options?: AzureRuntimeFetchOptions): Promise<Response | null>
 }
 
 export class AzureRestRuntimeClient implements AzureRuntimeClient {
-    constructor(readonly endpoint: string = azureEndpoint()) {}
+    constructor(
+        readonly endpoint: string = azureEndpoint(),
+        readonly accountName: string = azureAccountName(),
+    ) {}
 
     async fetch(path: string, init: RequestInit, options: AzureRuntimeFetchOptions = {}): Promise<Response | null> {
-        const res = await globalThis.fetch(`${this.endpoint}${path}`, {
-            ...init,
-            headers: {
-                'x-ms-version': '2021-12-02',
-                ...(init.headers ?? {}),
-            },
-        })
+        let res: Response
+        try {
+            res = await globalThis.fetch(`${this.endpoint}${path}`, {
+                ...init,
+                headers: {
+                    'x-ms-version': '2021-12-02',
+                    ...(init.headers ?? {}),
+                },
+            })
+        } catch (error) {
+            throw new Error(`Cannot reach Floci-AZ at ${this.endpoint}: ${errorMessage(error)}`)
+        }
 
         if (options.emptyOnNotFound && res.status === 404) return null
         if (!res.ok) throw new Error(`Azure Blob request failed: HTTP ${res.status}`)
@@ -30,4 +39,12 @@ export function azureEndpoint(): string {
     return process.env.FLOCI_AZURE_ENDPOINT ?? process.env.FLOCI_AZ_ENDPOINT ?? 'http://localhost:4577'
 }
 
+export function azureAccountName(): string {
+    return process.env.FLOCI_AZURE_ACCOUNT_NAME ?? 'devstoreaccount1'
+}
+
 export const azure = new AzureRestRuntimeClient()
+
+function errorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error)
+}
