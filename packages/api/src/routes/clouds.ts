@@ -115,6 +115,20 @@ export function createCloudRoutes(service: CloudProxyService = createCloudProxyS
         })
     })
 
+    app.post('/:cloud/services/:service/resources/:id/object/copy', async (c) => {
+        const cloud = c.req.param('cloud') as CloudProvider
+        const serviceType = c.req.param('service') as CloudServiceType
+        if (!isCloudProvider(cloud) || !isServiceType(serviceType)) return c.json({error: 'Unknown cloud or service'}, 404)
+
+        const {srcKey, destKey, destResourceId} = await c.req.json<{srcKey: string; destKey: string; destResourceId?: string}>()
+        if (!srcKey || !destKey) return c.json({error: 'srcKey and destKey are required'}, 400)
+
+        return withRuntime(c, async () => {
+            await service.copyObject(cloud, serviceType, c.req.param('id'), srcKey, destKey, destResourceId)
+            return c.json({ok: true})
+        })
+    })
+
     app.post('/:cloud/services/:service/resources', async (c) => {
         const cloud = c.req.param('cloud') as CloudProvider
         const serviceType = c.req.param('service') as CloudServiceType

@@ -1,4 +1,5 @@
 import {
+    CopyObjectCommand,
     CreateBucketCommand,
     DeleteBucketCommand,
     DeleteObjectCommand,
@@ -137,6 +138,15 @@ export class AwsStorageAdapter implements CloudServiceAdapter {
 
     async deleteObject(resourceId: string, key: string): Promise<void> {
         await s3.send(new DeleteObjectCommand({Bucket: resourceId, Key: key}))
+    }
+
+    async copyObject(srcResourceId: string, srcKey: string, destKey: string, destResourceId?: string): Promise<void> {
+        const destBucket = destResourceId ?? srcResourceId
+        await s3.send(new CopyObjectCommand({
+            Bucket: destBucket,
+            Key: destKey,
+            CopySource: `${srcResourceId}/${srcKey}`,
+        }))
     }
 }
 

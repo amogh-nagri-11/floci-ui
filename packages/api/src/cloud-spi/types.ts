@@ -45,7 +45,7 @@ export interface FieldSchema {
 
 export type ActionSchema = 'list' | 'create' | 'delete' | 'inspect'
 export type ResourceActionName = 'list' | 'create' | 'delete' | 'inspect'
-export type ObjectActionName = 'list' | 'upload' | 'download' | 'delete' | 'createFolder'
+export type ObjectActionName = 'list' | 'upload' | 'download' | 'delete' | 'createFolder' | 'copy'
 export type CapabilityStatus = 'available' | 'blocked' | 'partial' | 'coming_soon'
 
 export interface CapabilitySchema<TAction extends string> {
@@ -127,4 +127,5 @@ export interface CloudServiceAdapter {
     putObject?(resourceId: string, key: string, body: Uint8Array, contentType: string): Promise<void>
     getObject?(resourceId: string, key: string): Promise<StorageObjectDownload>
     deleteObject?(resourceId: string, key: string): Promise<void>
+    copyObject?(srcResourceId: string, srcKey: string, destKey: string, destResourceId?: string): Promise<void>
 }

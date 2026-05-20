@@ -25,6 +25,7 @@ export const apiEndpointKeys = {
         upload: "clouds.services.storage.objects.upload",
         download: "clouds.services.storage.objects.download",
         delete: "clouds.services.storage.objects.delete",
+        copy: "clouds.services.storage.objects.copy",
       },
     },
   },
@@ -196,6 +197,14 @@ export const endpointRegistry: EndpointRegistry = new Map([
     {
       path: "/clouds/:cloud/services/storage/resources/:id/object",
       method: "DELETE",
+      telemetry: { service: "cloud-proxy" },
+    },
+  ],
+  [
+    apiEndpointKeys.clouds.storage.objects.copy,
+    {
+      path: "/clouds/:cloud/services/storage/resources/:id/object/copy",
+      method: "POST",
       telemetry: { service: "cloud-proxy" },
     },
   ],

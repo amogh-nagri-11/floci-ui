@@ -170,6 +170,24 @@ export async function deleteStorageObject(
   );
 }
 
+export async function copyStorageObject(
+  cloud: CloudProvider,
+  srcResourceId: string,
+  srcKey: string,
+  destKey: string,
+  destResourceId?: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  await apiClient.call<void, Record<string, unknown>>(
+    apiEndpointKeys.clouds.storage.objects.copy,
+    requestOptions(cloud, "storage", {
+      signal,
+      body: { srcKey, destKey, ...(destResourceId ? { destResourceId } : {}) },
+    }),
+    storagePathParams(cloud, srcResourceId),
+  );
+}
+
 function requestOptions<TBody = unknown>(
   cloud: CloudProvider,
   service: string,

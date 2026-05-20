@@ -32,6 +32,7 @@ const storageObjectActions: CapabilitySchema<ObjectActionName>[] = [
         reason: 'Folders are represented as object/blob prefixes, not filesystem directories.',
         runtimeRequired: true,
     },
+    {name: 'copy', label: 'Copy object', enabled: true, status: 'available', runtimeRequired: true},
 ]
 
 export function awsStorageSchema(): ServiceSchema {

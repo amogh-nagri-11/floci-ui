@@ -86,6 +86,15 @@ export class AzureStorageAdapter implements CloudServiceAdapter {
     async deleteObject(resourceId: string, key: string): Promise<void> {
         await this.client.fetch(`${containerPath(this.client, resourceId)}/${encodePath(key)}`, {method: 'DELETE'})
     }
+
+    async copyObject(srcResourceId: string, srcKey: string, destKey: string, destResourceId?: string): Promise<void> {
+        const destContainer = destResourceId ?? srcResourceId
+        const srcUrl = `${this.client.endpoint}${containerPath(this.client, srcResourceId)}/${encodePath(srcKey)}`
+        await this.client.fetch(`${containerPath(this.client, destContainer)}/${encodePath(destKey)}`, {
+            method: 'PUT',
+            headers: {'x-ms-copy-source': srcUrl},
+        })
+    }
 }
 
 function accountPath(client: AzureRuntimeClient): string {

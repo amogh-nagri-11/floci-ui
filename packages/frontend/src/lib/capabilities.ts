@@ -12,6 +12,7 @@ const actionLabels: Record<CapabilityActionName, string> = {
     upload: 'Upload',
     download: 'Download',
     createFolder: 'Create folder',
+    copy: 'Copy object',
 }
 
 export function normalizeCapabilities<TAction extends CapabilityActionName>(capabilities: Array<CapabilityInput<TAction>> = []): Array<CapabilitySchema<TAction>> {

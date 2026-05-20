@@ -136,6 +136,12 @@ export class CloudProxyService {
         await adapter.deleteObject(resourceId, key)
     }
 
+    async copyObject(cloud: CloudProvider, service: CloudServiceType, srcResourceId: string, srcKey: string, destKey: string, destResourceId?: string): Promise<void> {
+        const adapter = this.requireAdapter(cloud, service)
+        if (!adapter.copyObject) throw new Error(`Object copy is not supported for ${cloud}/${service}`)
+        await adapter.copyObject(srcResourceId, srcKey, destKey, destResourceId)
+    }
+
     private requireAdapter(cloud: CloudProvider, service: CloudServiceType) {
         const adapter = this.registry.get(cloud, service)
         if (!adapter) throw new Error(`No adapter registered for ${cloud}/${service}`)
