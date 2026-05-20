@@ -1,32 +1,35 @@
 :root {
     color-scheme: dark;
 
-    --bg: #0d1b2a;
-    --surface: #192133;
-    --elevated: #1a2639;
-    --raised: #243447;
-    --raised-hover: #2a3d54;
-    --border: #2d3f57;
-    --border-faint: rgba(45, 63, 87, 0.7);
-    --border-lighter: rgba(45, 63, 87, 0.4);
-    --border-hover: #3a5270;
-    --active-nav-bg: #243447;
+    /* ── Floci dark palette ── */
+    --bg: #0f1117;
+    --surface: #1a1d2e;
+    --elevated: #12152b;
+    --raised: #1e2245;
+    --raised-hover: #252b52;
+    --border: rgba(92, 107, 192, 0.25);
+    --border-faint: rgba(92, 107, 192, 0.15);
+    --border-lighter: rgba(92, 107, 192, 0.08);
+    --border-hover: rgba(92, 107, 192, 0.45);
+    --active-nav-bg: rgba(92, 107, 192, 0.18);
 
-    --text: #d1d1d1;
+    --text: #e8eaf6;
     --text-bright: #ffffff;
-    --text-2: #8d9cad;
-    --text-3: #5f7080;
-    --text-nav: #aab4c4;
+    --text-2: #9fa8c7;
+    --text-3: #5c6695;
+    --text-nav: #b0b8d8;
 
-    --accent: #ff9900;
-    --accent-tint: rgba(255, 153, 0, 0.14);
-    --accent-tint-faint: rgba(255, 153, 0, 0.05);
-    --accent-tint-border: rgba(255, 153, 0, 0.2);
+    /* Floci gold accent */
+    --accent: #f9a825;
+    --accent-tint: rgba(249, 168, 37, 0.15);
+    --accent-tint-faint: rgba(249, 168, 37, 0.06);
+    --accent-tint-border: rgba(249, 168, 37, 0.22);
 
-    --link: #539fe5;
-    --link-tint: rgba(83, 159, 229, 0.06);
-    --link-tint-hover: rgba(83, 159, 229, 0.12);
-    --link-tint-border: rgba(83, 159, 229, 0.2);
+    /* Floci indigo interactive */
+    --link: #7986cb;
+    --link-tint: rgba(121, 134, 203, 0.08);
+    --link-tint-hover: rgba(121, 134, 203, 0.14);
+    --link-tint-border: rgba(121, 134, 203, 0.22);
 
     --hover: rgba(255, 255, 255, 0.04);
     --hover-md: rgba(255, 255, 255, 0.06);
@@ -35,15 +38,15 @@
     --input-bg: rgba(255, 255, 255, 0.06);
     --connection-bg: rgba(255, 255, 255, 0.03);
     --kbd-border: rgba(255, 255, 255, 0.1);
-    --scrollbar-thumb: #2c3b52;
-    --service-card-bg: rgba(17, 24, 39, 0.92);
-    --service-card-hover: rgba(31, 41, 55, 0.96);
-    --fn-card-hover: rgba(31, 50, 72, 0.9);
-    --bulk-bar-bg: #1e3a5f;
-    --bulk-bar-border: #2563eb;
-    --bulk-bar-text: #e0eaff;
+    --scrollbar-thumb: rgba(92, 107, 192, 0.3);
+    --service-card-bg: rgba(15, 17, 23, 0.92);
+    --service-card-hover: rgba(26, 29, 46, 0.96);
+    --fn-card-hover: rgba(30, 34, 69, 0.9);
+    --bulk-bar-bg: rgba(57, 73, 171, 0.35);
+    --bulk-bar-border: #5c6bc0;
+    --bulk-bar-text: #e8eaf6;
 
-    font-family: Inter, system-ui, sans-serif;
+    font-family: Sora, Inter, system-ui, sans-serif;
     background: var(--bg);
     color: var(--text);
 }
@@ -51,32 +54,35 @@
 [data-theme="light"] {
     color-scheme: light;
 
-    --bg: #f0f4f8;
+    /* ── Floci light palette ── */
+    --bg: #f4f6fc;
     --surface: #ffffff;
     --elevated: #ffffff;
-    --raised: #edf2f7;
-    --raised-hover: #e2e8f0;
-    --border: #cbd5e0;
-    --border-faint: rgba(203, 213, 224, 0.7);
-    --border-lighter: rgba(203, 213, 224, 0.4);
-    --border-hover: #94a3b8;
-    --active-nav-bg: #e8f0fe;
+    --raised: #eef0f8;
+    --raised-hover: #e4e7f5;
+    --border: rgba(92, 107, 192, 0.22);
+    --border-faint: rgba(92, 107, 192, 0.14);
+    --border-lighter: rgba(92, 107, 192, 0.08);
+    --border-hover: rgba(92, 107, 192, 0.45);
+    --active-nav-bg: rgba(57, 73, 171, 0.09);
 
-    --text: #2d3748;
-    --text-bright: #1a202c;
-    --text-2: #4a5568;
-    --text-3: #718096;
-    --text-nav: #4a5568;
+    --text: #263052;
+    --text-bright: #12173e;
+    --text-2: #4a5296;
+    --text-3: #6b74a8;
+    --text-nav: #4a5296;
 
-    --accent: #e68a00;
-    --accent-tint: rgba(230, 138, 0, 0.12);
-    --accent-tint-faint: rgba(230, 138, 0, 0.06);
-    --accent-tint-border: rgba(230, 138, 0, 0.25);
+    /* Floci gold accent (light) */
+    --accent: #c49000;
+    --accent-tint: rgba(196, 144, 0, 0.12);
+    --accent-tint-faint: rgba(196, 144, 0, 0.06);
+    --accent-tint-border: rgba(196, 144, 0, 0.25);
 
-    --link: #2563eb;
-    --link-tint: rgba(37, 99, 235, 0.06);
-    --link-tint-hover: rgba(37, 99, 235, 0.1);
-    --link-tint-border: rgba(37, 99, 235, 0.2);
+    /* Floci indigo interactive (light) */
+    --link: #3949ab;
+    --link-tint: rgba(57, 73, 171, 0.07);
+    --link-tint-hover: rgba(57, 73, 171, 0.12);
+    --link-tint-border: rgba(57, 73, 171, 0.22);
 
     --hover: rgba(0, 0, 0, 0.04);
     --hover-md: rgba(0, 0, 0, 0.05);
@@ -85,13 +91,13 @@
     --input-bg: rgba(0, 0, 0, 0.04);
     --connection-bg: rgba(0, 0, 0, 0.02);
     --kbd-border: rgba(0, 0, 0, 0.15);
-    --scrollbar-thumb: #cbd5e0;
+    --scrollbar-thumb: rgba(92, 107, 192, 0.3);
     --service-card-bg: #ffffff;
-    --service-card-hover: #f8fafc;
-    --fn-card-hover: #f1f5f9;
-    --bulk-bar-bg: #dbeafe;
-    --bulk-bar-border: #3b82f6;
-    --bulk-bar-text: #1e3a8a;
+    --service-card-hover: #f5f7ff;
+    --fn-card-hover: #eff1ff;
+    --bulk-bar-bg: rgba(57, 73, 171, 0.1);
+    --bulk-bar-border: #3949ab;
+    --bulk-bar-text: #1a237e;
 }
 
 * {
@@ -126,7 +132,7 @@ button {
 code,
 pre,
 .mono {
-    font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+    font-family: "Space Mono", "JetBrains Mono", "Fira Code", Consolas, monospace;
 }
 
 ::-webkit-scrollbar {
@@ -1718,7 +1724,7 @@ button.console-service-card {
 .log-line {
     padding: 8px 12px;
     border-bottom: 1px solid var(--border-lighter);
-    font-family: "JetBrains Mono", Consolas, monospace;
+    font-family: "Space Mono", "JetBrains Mono", Consolas, monospace;
     font-size: 12px;
     white-space: pre-wrap;
     word-break: break-word;
@@ -1918,7 +1924,7 @@ button.console-service-card {
     border-radius: 4px;
     padding: 10px 12px;
     margin: 0;
-    font-family: "JetBrains Mono", Consolas, monospace;
+    font-family: "Space Mono", "JetBrains Mono", Consolas, monospace;
     font-size: 12px;
     line-height: 1.6;
     white-space: pre-wrap;
@@ -1943,7 +1949,7 @@ button.console-service-card {
     border: 1px solid var(--border);
     border-radius: 4px;
     padding: 8px 12px;
-    font-family: "JetBrains Mono", Consolas, monospace;
+    font-family: "Space Mono", "JetBrains Mono", Consolas, monospace;
     font-size: 11px;
     color: var(--text-2);
     line-height: 1.6;
@@ -1982,7 +1988,7 @@ button.console-service-card {
     border-radius: 999px;
     font-size: 11px;
     font-weight: 500;
-    font-family: "JetBrains Mono", Consolas, monospace;
+    font-family: "Space Mono", "JetBrains Mono", Consolas, monospace;
 }
 
 .fn-meta {
@@ -2007,7 +2013,7 @@ button.console-service-card {
 .fn-meta-value {
     font-size: 12px;
     color: var(--text);
-    font-family: "JetBrains Mono", Consolas, monospace;
+    font-family: "Space Mono", "JetBrains Mono", Consolas, monospace;
     margin-top: 1px;
     white-space: nowrap;
     overflow: hidden;
@@ -2119,7 +2125,7 @@ button.console-service-card {
     padding: 0 8px;
     outline: none;
     font-size: 12px;
-    font-family: "JetBrains Mono", Consolas, monospace;
+    font-family: "Space Mono", "JetBrains Mono", Consolas, monospace;
 }
 
 .tag-input:focus {
@@ -2177,7 +2183,7 @@ button.console-service-card {
     border: 1px solid var(--border);
     border-radius: 4px;
     color: var(--text);
-    font-family: "JetBrains Mono", Consolas, monospace;
+    font-family: "Space Mono", "JetBrains Mono", Consolas, monospace;
     font-size: 12px;
     resize: vertical;
     outline: none;
@@ -2188,14 +2194,14 @@ button.console-service-card {
 }
 
 .button.primary {
-    background: #1d4ed8;
-    border-color: #1d4ed8;
+    background: #3949ab;
+    border-color: #3949ab;
     color: white;
 }
 
 .button.primary:hover {
-    background: #2563eb;
-    border-color: #2563eb;
+    background: #5c6bc0;
+    border-color: #5c6bc0;
 }
 
 .button.danger {
@@ -2302,7 +2308,7 @@ tr:hover .bucket-action-btn {
 .meta-value {
     font-size: 12px;
     color: var(--text);
-    font-family: "JetBrains Mono", Consolas, monospace;
+    font-family: "Space Mono", "JetBrains Mono", Consolas, monospace;
     word-break: break-all;
 }
 
@@ -2351,7 +2357,7 @@ tr:hover .bucket-action-btn {
 }
 
 .toggle-switch input:checked + .toggle-track {
-    background: #1d4ed8;
+    background: #3949ab;
 }
 
 .toggle-switch input:checked + .toggle-track::after {
@@ -2442,7 +2448,7 @@ tr:hover .bucket-action-btn {
     padding: 3px 8px;
     border-radius: 4px;
     font-size: 11px;
-    font-family: "JetBrains Mono", Consolas, monospace;
+    font-family: "Space Mono", "JetBrains Mono", Consolas, monospace;
     border: 1px solid var(--border);
     background: var(--raised);
 }
@@ -2490,7 +2496,7 @@ tr:hover .bucket-action-btn {
     border: 1px solid var(--border);
     border-radius: 4px;
     color: var(--text);
-    font-family: "JetBrains Mono", Consolas, monospace;
+    font-family: "Space Mono", "JetBrains Mono", Consolas, monospace;
     font-size: 12px;
     line-height: 1.6;
     resize: vertical;
