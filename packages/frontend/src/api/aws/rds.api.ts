@@ -29,6 +29,7 @@ export type RdsInstance = {
   identifier: string;
   arn?: string;
   resourceId?: string;
+  createdAt?: string;
   status?: string;
   engine?: string;
   engineVersion?: string;
@@ -46,6 +47,21 @@ export type RdsInstance = {
   endpoint?: RdsEndpoint;
   vpcSecurityGroups: RdsVpcSecurityGroup[];
   subnetGroup?: RdsDbSubnetGroup;
+};
+
+export type RdsSnapshot = {
+  identifier: string;
+  instanceIdentifier?: string;
+  arn?: string;
+  status?: string;
+  engine?: string;
+  engineVersion?: string;
+  allocatedStorage?: number;
+  snapshotType?: string;
+  createdAt?: string;
+  port?: number;
+  availabilityZone?: string;
+  vpcId?: string;
 };
 
 export async function listRdsInstances(
@@ -67,6 +83,40 @@ export async function describeRdsInstance(
     apiEndpointKeys.aws.rds.instances.describe,
     { signal },
     { identifier },
+  );
+
+  return res.data;
+}
+
+export async function listRdsSnapshots(
+  instanceIdentifier?: string,
+  signal?: AbortSignal,
+): Promise<RdsSnapshot[]> {
+  const res = await apiClient.call<RdsSnapshot[]>(
+    apiEndpointKeys.aws.rds.snapshots.list,
+    {
+      signal,
+      params: instanceIdentifier ? { instanceIdentifier } : undefined,
+    },
+  );
+
+  return res.data;
+}
+
+export async function createRdsSnapshot(
+  instanceIdentifier: string,
+  snapshotIdentifier?: string,
+  signal?: AbortSignal,
+): Promise<RdsSnapshot> {
+  const res = await apiClient.call<
+    RdsSnapshot,
+    { instanceIdentifier: string; snapshotIdentifier?: string }
+  >(
+    apiEndpointKeys.aws.rds.snapshots.create,
+    {
+      signal,
+      body: { instanceIdentifier, snapshotIdentifier },
+    },
   );
 
   return res.data;
@@ -95,5 +145,7 @@ export async function listRdsResources(
 export const rdsClient = {
   listInstances: listRdsInstances,
   describeInstance: describeRdsInstance,
+  listSnapshots: listRdsSnapshots,
+  createSnapshot: createRdsSnapshot,
   listResources: listRdsResources,
 };

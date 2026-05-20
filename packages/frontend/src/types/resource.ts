@@ -5,9 +5,13 @@ export interface CloudResource {
     name: string
     cloud: Exclude<CloudProvider, 'gcp'>
     service: CloudServiceType
-    type: 'bucket' | 'container'
+    type: 'bucket' | 'container' | 'cluster' | 'db-instance'
     region: string | null
     createdAt: string | null
+    status?: string | null
+    version?: string | null
+    engine?: string | null
+    instanceClass?: string | null
     metadata: Record<string, unknown>
 }
 

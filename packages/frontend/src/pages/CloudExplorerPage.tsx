@@ -90,7 +90,7 @@ function normalizeCloud(value?: string): CloudProvider | null {
 }
 
 function normalizeService(value?: string): CloudServiceType | null {
-    return value === 'storage' ? value : null
+    return value === 'storage' || value === 'k8s' || value === 'database' ? value : null
 }
 
 function RuntimeCard({
@@ -147,7 +147,7 @@ function runtimeState(status?: CloudStatus, loading?: boolean): 'ready' | 'pendi
 function adapterValue(cloud: CloudProvider, status?: CloudStatus): string {
     if (cloud === 'gcp') return 'GCP Adapter'
     if (status?.adapterRegistered === false) return 'Not registered'
-    return `${cloud.toUpperCase()} Storage Adapter`
+    return `${cloud.toUpperCase()} Adapter`
 }
 
 function adapterDetail(status?: CloudStatus, loading?: boolean): string {

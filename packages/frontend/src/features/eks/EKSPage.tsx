@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Boxes, Info, RefreshCw, Server, ShieldCheck } from "lucide-react";
+import {
+  Boxes,
+  Info,
+  RefreshCw,
+  Server,
+  ShieldCheck,
+  Tags,
+} from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import type { EksCluster, EksNodegroup } from "@/api/aws/eks.api";
 import {
@@ -99,6 +106,34 @@ function ClusterSummary({ cluster }: { cluster: EksCluster }) {
   );
 }
 
+function ClusterTags({ tags }: { tags: Record<string, string> }) {
+  const entries = Object.entries(tags);
+
+  return (
+    <div className="widget section-space">
+      <div className="widget-header">
+        <Tags size={13} color="var(--accent)" />
+        <h3>Tags</h3>
+        <span className="badge neutral">{entries.length}</span>
+      </div>
+      <div className="widget-body">
+        {entries.length === 0 ? (
+          <p className="muted compact-text">No tags returned for this cluster.</p>
+        ) : (
+          <div className="metadata-tags">
+            {entries.map(([key, value]) => (
+              <span className="metadata-tag" key={`${key}:${value}`}>
+                <strong>{key}</strong>
+                <span>{value}</span>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Meta({ label, value }: { label: string; value: string }) {
   return (
     <div className="meta-row">
@@ -157,7 +192,7 @@ function NodegroupTable({ nodegroups }: { nodegroups: EksNodegroup[] }) {
 
 export function EKSPage() {
   const clustersQuery = useEksClustersQuery();
-  const clusters = clustersQuery.data ?? [];
+  const clusters = useMemo(() => clustersQuery.data ?? [], [clustersQuery.data]);
   const [selectedClusterName, setSelectedClusterName] = useState<string | null>(null);
 
   useEffect(() => {
@@ -246,6 +281,7 @@ export function EKSPage() {
               </div>
 
               <ClusterSummary cluster={selectedCluster} />
+              <ClusterTags tags={selectedCluster.tags} />
 
               <div className="table-panel section-space">
                 <div className="widget-header">
@@ -272,4 +308,3 @@ export function EKSPage() {
     </>
   );
 }
-

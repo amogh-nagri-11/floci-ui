@@ -62,6 +62,12 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
         setSelectedObject(undefined)
     }, [selected?.id])
 
+    useEffect(() => {
+        setSelected(undefined)
+        setSelectedObject(undefined)
+        setCreateOpen(false)
+    }, [cloud, service])
+
     if (schemaQuery.isLoading) {
         return <div className="empty compact"><h3>Loading schema</h3></div>
     }
@@ -86,6 +92,7 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
 
     const schema = schemaQuery.data
     const resources = resourcesQuery.data ?? []
+    const canCreate = schema.actions.includes('create')
     const runtimeState = statusLoading
         ? 'Checking runtime'
         : cloudStatus?.runtime === 'reachable'
@@ -132,18 +139,20 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
                             </div>
                             <div className="resource-table-tools">
                                 <input className="input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Filter resources"/>
-                                <button className="button" type="button" disabled={!canUseRuntime} onClick={() => setCreateOpen((open) => !open)}>
-                                    <Plus size={14}/>
-                                    Create
-                                    {createOpen ? <ChevronUp size={13}/> : <ChevronDown size={13}/>}
-                                </button>
+                                {canCreate && (
+                                    <button className="button" type="button" disabled={!canUseRuntime} onClick={() => setCreateOpen((open) => !open)}>
+                                        <Plus size={14}/>
+                                        Create
+                                        {createOpen ? <ChevronUp size={13}/> : <ChevronDown size={13}/>}
+                                    </button>
+                                )}
                                 <button className="button" type="button" disabled={!canUseRuntime || resourcesQuery.isFetching} onClick={() => resourcesQuery.refetch()}>
                                     <RefreshCw size={14}/>
                                     {resourcesQuery.isFetching ? 'Loading' : 'Refresh'}
                                 </button>
                             </div>
                         </div>
-                        {createOpen && (
+                        {canCreate && createOpen && (
                             <div className="resource-create-inline">
                                 <DynamicFormRenderer
                                     schema={schema}
@@ -169,7 +178,9 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
                 </section>
                 <ResourceInspector resource={selected} object={selectedObject}/>
             </div>
-            <StorageObjectBrowser cloud={cloud} resource={selected} selectedObjectKey={selectedObject?.key} onSelectObject={setSelectedObject}/>
+            {service === 'storage' && (
+                <StorageObjectBrowser cloud={cloud} resource={selected} selectedObjectKey={selectedObject?.key} onSelectObject={setSelectedObject}/>
+            )}
         </div>
     )
 }

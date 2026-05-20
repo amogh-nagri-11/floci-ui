@@ -57,6 +57,7 @@ function NavItem({to, icon, label}: { to: string; icon: React.ElementType; label
 
 const CLOUD_SERVICE_ICONS = {
     storage: Database,
+    k8s: Boxes,
     queue: MessageSquare,
     function: Zap,
     database: Table2,
@@ -64,24 +65,29 @@ const CLOUD_SERVICE_ICONS = {
 
 type CloudSidebarService = keyof typeof CLOUD_SERVICE_ICONS
 
-const CLOUD_SERVICE_PLACEHOLDERS: Array<{name: CloudSidebarService; label: string}> = [
+const CLOUD_SERVICE_ITEMS: Array<{name: CloudSidebarService; label: string; route?: string}> = [
+    {name: 'storage', label: 'Storage', route: 'storage'},
+    {name: 'k8s', label: 'k8s Engine', route: 'k8s'},
+    {name: 'database', label: 'Database', route: 'database'},
     {name: 'queue', label: 'Queue'},
     {name: 'function', label: 'Function'},
-    {name: 'database', label: 'Database'},
 ]
 
 function CloudServiceNav() {
     const location = useLocation()
     const cloud = activeCloudFromPath(location.pathname)
     const cloudLabel = cloud.toUpperCase()
-    const storageLabel = cloud === 'aws' ? 'S3 Storage' : cloud === 'azure' ? 'Blob Storage' : 'Storage'
 
     return (
         <div className="nav-section cloud-service-nav">
             <span className="nav-label">Cloud Services · {cloudLabel}</span>
-            <NavItem to={`/cloud-explorer/${cloud}/storage`} icon={CLOUD_SERVICE_ICONS.storage} label={storageLabel}/>
-            {CLOUD_SERVICE_PLACEHOLDERS.map((service) => {
+            {CLOUD_SERVICE_ITEMS.map((service) => {
                 const Icon = CLOUD_SERVICE_ICONS[service.name]
+                const available = service.name === 'storage' || ((service.name === 'k8s' || service.name === 'database') && cloud === 'aws')
+                if (service.route && available) {
+                    return <NavItem key={service.name} to={`/cloud-explorer/${cloud}/${service.route}`} icon={Icon} label={service.label}/>
+                }
+
                 return (
                     <div key={service.name} className="nav-link disabled">
                         <Icon size={14}/>

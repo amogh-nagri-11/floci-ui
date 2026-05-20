@@ -1,6 +1,9 @@
 import {
+  CreateDBSnapshotCommand,
   DescribeDBInstancesCommand,
+  DescribeDBSnapshotsCommand,
   type DBInstance,
+  type DBSnapshot,
   type RDSClient,
 } from "@aws-sdk/client-rds";
 import { awsClients } from "../aws";
@@ -33,6 +36,7 @@ export type RdsInstance = {
   identifier: string;
   arn?: string;
   resourceId?: string;
+  createdAt?: string;
   status?: string;
   engine?: string;
   engineVersion?: string;
@@ -52,11 +56,27 @@ export type RdsInstance = {
   subnetGroup?: RdsDbSubnetGroup;
 };
 
+export type RdsSnapshot = {
+  identifier: string;
+  instanceIdentifier?: string;
+  arn?: string;
+  status?: string;
+  engine?: string;
+  engineVersion?: string;
+  allocatedStorage?: number;
+  snapshotType?: string;
+  createdAt?: string;
+  port?: number;
+  availabilityZone?: string;
+  vpcId?: string;
+};
+
 function toRdsInstance(instance: DBInstance): RdsInstance {
   return {
     identifier: instance.DBInstanceIdentifier ?? "",
     arn: instance.DBInstanceArn,
     resourceId: instance.DbiResourceId,
+    createdAt: instance.InstanceCreateTime?.toISOString(),
     status: instance.DBInstanceStatus,
     engine: instance.Engine,
     engineVersion: instance.EngineVersion,
@@ -97,6 +117,23 @@ function toRdsInstance(instance: DBInstance): RdsInstance {
   };
 }
 
+function toRdsSnapshot(snapshot: DBSnapshot): RdsSnapshot {
+  return {
+    identifier: snapshot.DBSnapshotIdentifier ?? "",
+    instanceIdentifier: snapshot.DBInstanceIdentifier,
+    arn: snapshot.DBSnapshotArn,
+    status: snapshot.Status,
+    engine: snapshot.Engine,
+    engineVersion: snapshot.EngineVersion,
+    allocatedStorage: snapshot.AllocatedStorage,
+    snapshotType: snapshot.SnapshotType,
+    createdAt: snapshot.SnapshotCreateTime?.toISOString(),
+    port: snapshot.Port,
+    availabilityZone: snapshot.AvailabilityZone,
+    vpcId: snapshot.VpcId,
+  };
+}
+
 export function createRdsService(client: RDSClient = awsClients.rds) {
   return {
     async listInstances(): Promise<RdsInstance[]> {
@@ -120,7 +157,44 @@ export function createRdsService(client: RDSClient = awsClients.rds) {
       );
       return toRdsInstance(res.DBInstances?.[0] ?? {});
     },
+
+    async listSnapshots(instanceIdentifier?: string): Promise<RdsSnapshot[]> {
+      const snapshots: RdsSnapshot[] = [];
+      let marker: string | undefined;
+
+      try {
+        do {
+          const res = await client.send(
+            new DescribeDBSnapshotsCommand({
+              DBInstanceIdentifier: instanceIdentifier,
+              Marker: marker,
+            }),
+          );
+          snapshots.push(...(res.DBSnapshots ?? []).map(toRdsSnapshot));
+          marker = res.Marker;
+        } while (marker);
+      } catch (error) {
+        if (isUnsupportedOperation(error)) return [];
+        throw error;
+      }
+
+      return snapshots;
+    },
+
+    async createSnapshot(instanceIdentifier: string, snapshotIdentifier: string): Promise<RdsSnapshot> {
+      const res = await client.send(
+        new CreateDBSnapshotCommand({
+          DBInstanceIdentifier: instanceIdentifier,
+          DBSnapshotIdentifier: snapshotIdentifier,
+        }),
+      );
+      return toRdsSnapshot(res.DBSnapshot ?? {});
+    },
   };
+}
+
+function isUnsupportedOperation(error: unknown) {
+  return error instanceof Error && error.message.includes("is not supported");
 }
 
 export const rdsService = createRdsService();

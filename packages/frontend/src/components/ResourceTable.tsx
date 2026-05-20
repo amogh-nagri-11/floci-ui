@@ -14,6 +14,7 @@ interface ResourceTableProps {
 
 export function ResourceTable({schema, resources, selectedId, onSelect, onDelete, deletingId}: ResourceTableProps) {
     const [confirmId, setConfirmId] = useState<string | null>(null)
+    const canDelete = schema.actions.includes('delete')
 
     if (resources.length === 0) {
         return (
@@ -29,7 +30,7 @@ export function ResourceTable({schema, resources, selectedId, onSelect, onDelete
             <thead>
                 <tr>
                     {schema.columns.map((column) => <th key={column.name}>{column.label}</th>)}
-                    <th aria-label="Actions"/>
+                    {canDelete && <th aria-label="Actions"/>}
                 </tr>
             </thead>
             <tbody>
@@ -40,31 +41,33 @@ export function ResourceTable({schema, resources, selectedId, onSelect, onDelete
                                 {formatValue(resource[column.name as keyof CloudResource])}
                             </td>
                         ))}
-                        <td className="table-actions">
-                            {confirmId === resource.id ? (
-                                <button
-                                    className="button danger compact"
-                                    type="button"
-                                    disabled={deletingId === resource.id}
-                                    onClick={() => {
-                                        onDelete(resource)
-                                        setConfirmId(null)
-                                    }}
-                                >
-                                    Confirm
-                                </button>
-                            ) : (
-                                <button
-                                    className="icon-btn danger"
-                                    type="button"
-                                    title={`Delete ${resource.name}`}
-                                    disabled={deletingId === resource.id}
-                                    onClick={() => setConfirmId(resource.id)}
-                                >
-                                    <Trash2 size={13}/>
-                                </button>
-                            )}
-                        </td>
+                        {canDelete && (
+                            <td className="table-actions">
+                                {confirmId === resource.id ? (
+                                    <button
+                                        className="button danger compact"
+                                        type="button"
+                                        disabled={deletingId === resource.id}
+                                        onClick={() => {
+                                            onDelete(resource)
+                                            setConfirmId(null)
+                                        }}
+                                    >
+                                        Confirm
+                                    </button>
+                                ) : (
+                                    <button
+                                        className="icon-btn danger"
+                                        type="button"
+                                        title={`Delete ${resource.name}`}
+                                        disabled={deletingId === resource.id}
+                                        onClick={() => setConfirmId(resource.id)}
+                                    >
+                                        <Trash2 size={13}/>
+                                    </button>
+                                )}
+                            </td>
+                        )}
                     </tr>
                 ))}
             </tbody>

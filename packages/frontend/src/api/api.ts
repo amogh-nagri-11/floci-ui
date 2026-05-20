@@ -88,12 +88,24 @@ export const apiEndpointKeys = {
       nodegroups: {
         list: "aws.eks.nodegroups.list",
         describe: "aws.eks.nodegroups.describe",
+        create: "aws.eks.nodegroups.create",
+        delete: "aws.eks.nodegroups.delete",
+      },
+      fargateProfiles: {
+        list: "aws.eks.fargate-profiles.list",
+        describe: "aws.eks.fargate-profiles.describe",
+        create: "aws.eks.fargate-profiles.create",
+        delete: "aws.eks.fargate-profiles.delete",
       },
     },
     rds: {
       instances: {
         list: "aws.rds.instances.list",
         describe: "aws.rds.instances.describe",
+      },
+      snapshots: {
+        list: "aws.rds.snapshots.list",
+        create: "aws.rds.snapshots.create",
       },
     },
   },
@@ -437,6 +449,54 @@ export const endpointRegistry: EndpointRegistry = new Map([
       telemetry: { provider: "aws", service: "eks" },
     },
   ],
+  [
+    apiEndpointKeys.aws.eks.nodegroups.create,
+    {
+      path: "/eks/clusters/:name/nodegroups",
+      method: "POST",
+      telemetry: { provider: "aws", service: "eks" },
+    },
+  ],
+  [
+    apiEndpointKeys.aws.eks.nodegroups.delete,
+    {
+      path: "/eks/clusters/:name/nodegroups/:nodegroup",
+      method: "DELETE",
+      telemetry: { provider: "aws", service: "eks" },
+    },
+  ],
+  [
+    apiEndpointKeys.aws.eks.fargateProfiles.list,
+    {
+      path: "/eks/clusters/:name/fargate-profiles",
+      method: "GET",
+      telemetry: { provider: "aws", service: "eks" },
+    },
+  ],
+  [
+    apiEndpointKeys.aws.eks.fargateProfiles.describe,
+    {
+      path: "/eks/clusters/:name/fargate-profiles/:profile",
+      method: "GET",
+      telemetry: { provider: "aws", service: "eks" },
+    },
+  ],
+  [
+    apiEndpointKeys.aws.eks.fargateProfiles.create,
+    {
+      path: "/eks/clusters/:name/fargate-profiles",
+      method: "POST",
+      telemetry: { provider: "aws", service: "eks" },
+    },
+  ],
+  [
+    apiEndpointKeys.aws.eks.fargateProfiles.delete,
+    {
+      path: "/eks/clusters/:name/fargate-profiles/:profile",
+      method: "DELETE",
+      telemetry: { provider: "aws", service: "eks" },
+    },
+  ],
 
   // AWS RDS
   [
@@ -452,6 +512,22 @@ export const endpointRegistry: EndpointRegistry = new Map([
     {
       path: "/rds/instances/:identifier",
       method: "GET",
+      telemetry: { provider: "aws", service: "rds" },
+    },
+  ],
+  [
+    apiEndpointKeys.aws.rds.snapshots.list,
+    {
+      path: "/rds/snapshots",
+      method: "GET",
+      telemetry: { provider: "aws", service: "rds" },
+    },
+  ],
+  [
+    apiEndpointKeys.aws.rds.snapshots.create,
+    {
+      path: "/rds/snapshots",
+      method: "POST",
       telemetry: { provider: "aws", service: "rds" },
     },
   ],

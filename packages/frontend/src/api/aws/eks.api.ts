@@ -26,6 +26,7 @@ export type EksCluster = {
   resourcesVpcConfig?: EksVpcConfig;
   tags: Record<string, string>;
   nodegroupCount?: number;
+  fargateProfileCount?: number;
 };
 
 export type EksNodegroup = {
@@ -48,6 +49,48 @@ export type EksNodegroup = {
   };
   labels: Record<string, string>;
   tags: Record<string, string>;
+};
+
+export type EksFargateProfileSelector = {
+  namespace?: string;
+  labels: Record<string, string>;
+};
+
+export type EksFargateProfile = {
+  name: string;
+  arn?: string;
+  clusterName: string;
+  createdAt?: string;
+  status?: string;
+  podExecutionRoleArn?: string;
+  subnets: string[];
+  selectors: EksFargateProfileSelector[];
+  tags: Record<string, string>;
+};
+
+export type CreateEksNodegroupInput = {
+  name: string;
+  nodeRole: string;
+  subnets: string[];
+  instanceTypes?: string[];
+  scalingConfig?: {
+    minSize?: number;
+    maxSize?: number;
+    desiredSize?: number;
+  };
+  labels?: Record<string, string>;
+  tags?: Record<string, string>;
+};
+
+export type CreateEksFargateProfileInput = {
+  name: string;
+  podExecutionRoleArn: string;
+  subnets?: string[];
+  selectors: {
+    namespace?: string;
+    labels?: Record<string, string>;
+  }[];
+  tags?: Record<string, string>;
 };
 
 export async function listEksClusters(
@@ -101,6 +144,88 @@ export async function describeEksNodegroup(
   return res.data;
 }
 
+export async function createEksNodegroup(
+  clusterName: string,
+  input: CreateEksNodegroupInput,
+): Promise<EksNodegroup> {
+  const res = await apiClient.call<EksNodegroup, CreateEksNodegroupInput>(
+    apiEndpointKeys.aws.eks.nodegroups.create,
+    { body: input },
+    { name: clusterName },
+  );
+
+  return res.data;
+}
+
+export async function deleteEksNodegroup(
+  clusterName: string,
+  nodegroupName: string,
+): Promise<EksNodegroup> {
+  const res = await apiClient.call<EksNodegroup>(
+    apiEndpointKeys.aws.eks.nodegroups.delete,
+    {},
+    { name: clusterName, nodegroup: nodegroupName },
+  );
+
+  return res.data;
+}
+
+export async function listEksFargateProfiles(
+  clusterName: string,
+  signal?: AbortSignal,
+): Promise<EksFargateProfile[]> {
+  const res = await apiClient.call<EksFargateProfile[]>(
+    apiEndpointKeys.aws.eks.fargateProfiles.list,
+    { signal },
+    { name: clusterName },
+  );
+
+  return res.data;
+}
+
+export async function describeEksFargateProfile(
+  clusterName: string,
+  profileName: string,
+  signal?: AbortSignal,
+): Promise<EksFargateProfile> {
+  const res = await apiClient.call<EksFargateProfile>(
+    apiEndpointKeys.aws.eks.fargateProfiles.describe,
+    { signal },
+    { name: clusterName, profile: profileName },
+  );
+
+  return res.data;
+}
+
+export async function createEksFargateProfile(
+  clusterName: string,
+  input: CreateEksFargateProfileInput,
+): Promise<EksFargateProfile> {
+  const res = await apiClient.call<
+    EksFargateProfile,
+    CreateEksFargateProfileInput
+  >(
+    apiEndpointKeys.aws.eks.fargateProfiles.create,
+    { body: input },
+    { name: clusterName },
+  );
+
+  return res.data;
+}
+
+export async function deleteEksFargateProfile(
+  clusterName: string,
+  profileName: string,
+): Promise<EksFargateProfile> {
+  const res = await apiClient.call<EksFargateProfile>(
+    apiEndpointKeys.aws.eks.fargateProfiles.delete,
+    {},
+    { name: clusterName, profile: profileName },
+  );
+
+  return res.data;
+}
+
 export async function listEksResources(
   signal?: AbortSignal,
 ): Promise<ResourceSummary[]> {
@@ -114,6 +239,7 @@ export async function listEksResources(
       version: cluster.version,
       platformVersion: cluster.platformVersion,
       nodegroups: cluster.nodegroupCount ?? 0,
+      fargateProfiles: cluster.fargateProfileCount ?? 0,
       vpcId: cluster.resourcesVpcConfig?.vpcId,
     },
   }));
@@ -124,5 +250,11 @@ export const eksClient = {
   describeCluster: describeEksCluster,
   listNodegroups: listEksNodegroups,
   describeNodegroup: describeEksNodegroup,
+  createNodegroup: createEksNodegroup,
+  deleteNodegroup: deleteEksNodegroup,
+  listFargateProfiles: listEksFargateProfiles,
+  describeFargateProfile: describeEksFargateProfile,
+  createFargateProfile: createEksFargateProfile,
+  deleteFargateProfile: deleteEksFargateProfile,
   listResources: listEksResources,
 };

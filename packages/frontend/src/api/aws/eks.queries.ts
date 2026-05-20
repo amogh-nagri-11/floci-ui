@@ -8,6 +8,10 @@ export const eksQueryKeys = {
     ["eks", "nodegroups", clusterName] as const,
   nodegroup: (clusterName: string | null, nodegroupName: string | null) =>
     ["eks", "nodegroup", clusterName, nodegroupName] as const,
+  fargateProfiles: (clusterName: string | null) =>
+    ["eks", "fargate-profiles", clusterName] as const,
+  fargateProfile: (clusterName: string | null, profileName: string | null) =>
+    ["eks", "fargate-profile", clusterName, profileName] as const,
 };
 
 export function useEksClustersQuery() {
@@ -45,6 +49,28 @@ export function useEksNodegroupQuery(
     queryFn: ({ signal }) =>
       eksClient.describeNodegroup(clusterName!, nodegroupName!, signal),
     enabled: Boolean(clusterName && nodegroupName),
+    refetchInterval: 30_000,
+  });
+}
+
+export function useEksFargateProfilesQuery(clusterName: string | null) {
+  return useQuery({
+    queryKey: eksQueryKeys.fargateProfiles(clusterName),
+    queryFn: ({ signal }) => eksClient.listFargateProfiles(clusterName!, signal),
+    enabled: Boolean(clusterName),
+    refetchInterval: 30_000,
+  });
+}
+
+export function useEksFargateProfileQuery(
+  clusterName: string | null,
+  profileName: string | null,
+) {
+  return useQuery({
+    queryKey: eksQueryKeys.fargateProfile(clusterName, profileName),
+    queryFn: ({ signal }) =>
+      eksClient.describeFargateProfile(clusterName!, profileName!, signal),
+    enabled: Boolean(clusterName && profileName),
     refetchInterval: 30_000,
   });
 }
