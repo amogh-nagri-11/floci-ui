@@ -1,6 +1,6 @@
 export type CloudProvider = 'aws' | 'azure' | 'gcp'
 
-export type CloudServiceType = 'storage' | 'k8s' | 'database'
+export type CloudServiceType = 'storage' | 'k8s' | 'database' | 'serverless' | 'compute'
 
 export type CloudAvailability = 'available' | 'coming_soon'
 
@@ -81,7 +81,7 @@ export interface CloudResource {
     name: string
     cloud: Extract<CloudProvider, 'aws' | 'azure'>
     service: CloudServiceType
-    type: 'bucket' | 'container' | 'cluster' | 'db-instance'
+    type: 'bucket' | 'container' | 'cluster' | 'db-instance' | 'instance' | 'image'
     region: string | null
     createdAt: string | null
     status?: string | null

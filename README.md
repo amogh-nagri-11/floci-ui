@@ -115,6 +115,7 @@ supports more operations than this UI currently exposes.
 | Lambda     |         90% | Full function detail. List functions, filter by name or runtime. Detail drawer with runtime, state, architecture, ARN, handler, memory, timeout, code size, environment variables. Invoke with JSON payload, response display, and log tail. Delete function.                |
 | SNS        |         90% | Full topic lifecycle. List, create (standard and FIFO), delete topics. List and manage subscriptions per topic (sqs, lambda, http, https, email, sms). Subscribe and unsubscribe endpoints. Publish messages with optional subject.                                          |
 | CloudWatch |         90% | Full log management. List, filter, create, delete log groups with retention policy. List and delete log streams. Browse and search log events. Rich parsing of Floci ingestor events into HTTP method/status/latency rows. List metrics and alarms. Auto-refresh every 10 s. |
+| EC2        |         99% | Full AWS-console-style surface. Networking sidebar grouped under "Networking": VPCs, Subnets, Internet Gateways, NAT Gateways, Route Tables, Elastic IPs. Launch instances via wizard (AMI, type, key pair, VPC/subnet/SG, IAM profile, user data). Full lifecycle: start, stop, reboot, terminate. Create AMI, console output, inline tag editor. Security group ingress rule editor. Key pair creation with one-time PEM display. VPC wizard (auto-provisions IGW, NAT GW, route tables). Route Table full editor (add/delete routes + subnet associations). NAT GW create with auto-allocate or existing EIP. Available in Cloud Explorer at /cloud-explorer/aws/compute. |
 
 Connected services today:
 
@@ -124,6 +125,7 @@ Connected services today:
 - Lambda
 - DynamoDB
 - SNS
+- EC2
 
 Placeholder services today:
 
@@ -326,6 +328,35 @@ Remaining gaps:
 | Topic tags                                           | `TagResource` / `ListTagsForResource`                                                  |
 | Subscription confirmation flow                       | Protocol-specific — email/http require confirmation before `SubscriptionArn` is active |
 | Subscription filter policies                         | `SetSubscriptionAttributes`                                                            |
+
+</details>
+
+<details>
+<summary><strong>EC2 — 99%</strong></summary>
+
+### EC2
+
+Implemented:
+
+- Collapsible sidebar with all 10 resource types. **Networking** group header above VPCs; sections: VPCs, Subnets, Internet Gateways, NAT Gateways, Route Tables, Elastic IPs. Compute: Instances, AMIs. Security: Security Groups, Key Pairs.
+- **Instances**: List with state badges, detail pane (instance + networking + security groups + tags). Launch wizard (AMI, type, key pair, VPC/subnet/SG, IAM profile, user data). Full lifecycle: Start, Stop, Reboot, Terminate (two-step confirm). Create AMI from instance. Console output modal. Inline tag editor.
+- **AMIs**: List with state, architecture, root device, creation date. Per-row inline confirm deregister.
+- **Security Groups**: List + detail. Create modal. Inline inbound rule editor (add/revoke). Outbound rules display. Delete with inline confirm.
+- **Key Pairs**: List + detail (ID, fingerprint). Create modal with one-time PEM display + Copy. Delete with inline confirm.
+- **VPCs**: List + detail. Two create paths: `+` simple modal (CIDR only) or `⊕` full VPC Wizard (auto-provisions IGW + NAT GW + public/private subnets + route tables, with live subnet preview). Delete with inline confirm (disabled for default VPC).
+- **Subnets**: List + detail (VPC, CIDR, AZ, available IPs). Create modal (VPC select, CIDR, optional AZ). Delete with inline confirm.
+- **Internet Gateways**: List + detail (ID, name, attached VPCs). Create modal (name optional, attach to VPC optional). Delete (auto-detaches all VPCs first). Delete with inline toolbar confirm.
+- **NAT Gateways**: List + detail (ID, VPC, subnet, state, public/private IP, EIP allocation). Create modal: subnet select + EIP source radio (auto-allocate or pick existing unattached EIP). Delete with polling until `deleted`. Inline toolbar confirm.
+- **Route Tables**: List + detail. Full inline editor: Routes table (Destination, Target, Status, Origin; add route with CIDR + IGW/NAT GW target dropdown; per-row delete except `local`). Subnet Associations table (associate new subnet from dropdown; per-row disassociate). Delete RTB (auto-disassociates non-main; hides delete for main RT).
+- **Elastic IPs**: List + detail (allocation ID, public IP, domain, association, instance). Allocate modal (optional name tag). Release with inline toolbar confirm (disabled when associated).
+- SPI adapter `delete()` wired to `TerminateInstances`. Available in Cloud Explorer at `/cloud-explorer/aws/compute`.
+
+Remaining gaps:
+
+| Feature                        | Notes                                                        |
+|--------------------------------|--------------------------------------------------------------|
+| SPI `create()` via Cloud Explorer | EC2 launch requires cascading fields not modeled in FieldSchema |
+| Outbound rule editor           | Revoke outbound rules not implemented (display only)         |
 
 </details>
 

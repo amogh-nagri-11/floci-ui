@@ -2704,11 +2704,6 @@ tr:hover .bucket-action-btn {
     min-width: 0;
 }
 
-.field-row select.input {
-    width: auto;
-    flex: 0 0 auto;
-}
-
 .modal-footer {
     display: flex;
     gap: 8px;

@@ -8,6 +8,7 @@ import {
 } from "./aws/cloudwatch.api";
 import { listEksResources } from "./aws/eks.api";
 import { listRdsResources } from "./aws/rds.api";
+import { listEc2Resources } from "./aws/ec2.api";
 import { getCloudStatus } from "./cloudProxyClient";
 import type {
   ConsoleOverview,
@@ -59,6 +60,13 @@ export const SERVICE_META: Array<{
     route: "/eks",
     implemented: true,
     resourceLabel: "clusters",
+  },
+  {
+    name: "ec2",
+    displayName: "EC2 & VPC",
+    route: "/ec2",
+    implemented: true,
+    resourceLabel: "instances",
   },
   {
     name: "dynamodb",
@@ -237,6 +245,7 @@ export async function listServiceResources(
   if (service === "lambda") return listLambdaFunctions(signal);
   if (service === "eks") return listEksResources(signal);
   if (service === "rds") return listRdsResources(signal);
+  if (service === "ec2") return listEc2Resources(signal);
   if (service === "dynamodb") return listDynamoDbTables(signal);
   if (service === "cloudwatch") return listAwsCloudWatchResources(signal);
   return [];

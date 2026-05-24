@@ -54,6 +54,12 @@ export class CloudProxyService {
             displayName: 'Serverless',
             availability: this.registry.get(cloud, 'serverless') ? 'available' : 'coming_soon',
         })
+        services.push({
+            cloud,
+            service: 'compute',
+            displayName: 'Compute',
+            availability: this.registry.get(cloud, 'compute') ? 'available' : 'coming_soon',
+        })
         return services
     }
 

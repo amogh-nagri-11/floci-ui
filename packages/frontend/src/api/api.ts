@@ -109,6 +109,72 @@ export const apiEndpointKeys = {
         create: "aws.rds.snapshots.create",
       },
     },
+    ec2: {
+      instances: {
+        list: "aws.ec2.instances.list",
+        describe: "aws.ec2.instances.describe",
+        create: "aws.ec2.instances.create",
+        start: "aws.ec2.instances.start",
+        stop: "aws.ec2.instances.stop",
+        reboot: "aws.ec2.instances.reboot",
+        terminate: "aws.ec2.instances.terminate",
+        tags: "aws.ec2.instances.tags",
+        createImage: "aws.ec2.instances.create-image",
+        console: "aws.ec2.instances.console",
+      },
+      amis: {
+        list: "aws.ec2.amis.list",
+        delete: "aws.ec2.amis.delete",
+      },
+      keyPairs: {
+        list: "aws.ec2.key-pairs.list",
+        create: "aws.ec2.key-pairs.create",
+        delete: "aws.ec2.key-pairs.delete",
+      },
+      securityGroups: {
+        list: "aws.ec2.security-groups.list",
+        create: "aws.ec2.security-groups.create",
+        delete: "aws.ec2.security-groups.delete",
+        authorize: "aws.ec2.security-groups.authorize",
+        revoke: "aws.ec2.security-groups.revoke",
+      },
+      vpcs: {
+        list: "aws.ec2.vpcs.list",
+        create: "aws.ec2.vpcs.create",
+        delete: "aws.ec2.vpcs.delete",
+      },
+      subnets: {
+        list: "aws.ec2.subnets.list",
+        create: "aws.ec2.subnets.create",
+        delete: "aws.ec2.subnets.delete",
+      },
+      internetGateways: {
+        list: "aws.ec2.igw.list",
+        create: "aws.ec2.igw.create",
+        attach: "aws.ec2.igw.attach",
+        detach: "aws.ec2.igw.detach",
+        delete: "aws.ec2.igw.delete",
+      },
+      natGateways: {
+        list: "aws.ec2.nat.list",
+        create: "aws.ec2.nat.create",
+        delete: "aws.ec2.nat.delete",
+      },
+      routeTables: {
+        list: "aws.ec2.rtb.list",
+        create: "aws.ec2.rtb.create",
+        delete: "aws.ec2.rtb.delete",
+        createRoute: "aws.ec2.rtb.route.create",
+        deleteRoute: "aws.ec2.rtb.route.delete",
+        associate: "aws.ec2.rtb.associate",
+        disassociate: "aws.ec2.rtb.disassociate",
+      },
+      elasticIps: {
+        list: "aws.ec2.eip.list",
+        create: "aws.ec2.eip.create",
+        delete: "aws.ec2.eip.delete",
+      },
+    },
   },
 } as const;
 
@@ -540,6 +606,138 @@ export const endpointRegistry: EndpointRegistry = new Map([
       telemetry: { provider: "aws", service: "rds" },
     },
   ],
+
+  // AWS EC2
+  [
+    apiEndpointKeys.aws.ec2.instances.list,
+    {
+      path: "/ec2/instances",
+      method: "GET",
+      telemetry: { provider: "aws", service: "ec2" },
+    },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.instances.describe,
+    {
+      path: "/ec2/instances/:instanceId",
+      method: "GET",
+      telemetry: { provider: "aws", service: "ec2" },
+    },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.instances.create,
+    { path: "/ec2/instances", method: "POST", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.instances.start,
+    { path: "/ec2/instances/:instanceId/start", method: "POST", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.instances.stop,
+    { path: "/ec2/instances/:instanceId/stop", method: "POST", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.instances.reboot,
+    { path: "/ec2/instances/:instanceId/reboot", method: "POST", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.instances.terminate,
+    { path: "/ec2/instances/:instanceId", method: "DELETE", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.instances.tags,
+    { path: "/ec2/instances/:instanceId/tags", method: "PUT", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.instances.createImage,
+    { path: "/ec2/instances/:instanceId/image", method: "POST", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.instances.console,
+    { path: "/ec2/instances/:instanceId/console", method: "GET", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.amis.list,
+    { path: "/ec2/amis", method: "GET", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.amis.delete,
+    { path: "/ec2/amis/:imageId", method: "DELETE", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.keyPairs.list,
+    { path: "/ec2/key-pairs", method: "GET", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.keyPairs.create,
+    { path: "/ec2/key-pairs", method: "POST", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.keyPairs.delete,
+    { path: "/ec2/key-pairs/:name", method: "DELETE", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.securityGroups.list,
+    { path: "/ec2/security-groups", method: "GET", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.securityGroups.create,
+    { path: "/ec2/security-groups", method: "POST", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.securityGroups.delete,
+    { path: "/ec2/security-groups/:groupId", method: "DELETE", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.securityGroups.authorize,
+    { path: "/ec2/security-groups/:groupId/ingress", method: "POST", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.securityGroups.revoke,
+    { path: "/ec2/security-groups/:groupId/ingress", method: "DELETE", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.vpcs.list,
+    { path: "/ec2/vpcs", method: "GET", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.vpcs.create,
+    { path: "/ec2/vpcs", method: "POST", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.vpcs.delete,
+    { path: "/ec2/vpcs/:vpcId", method: "DELETE", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.subnets.list,
+    { path: "/ec2/subnets", method: "GET", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.subnets.create,
+    { path: "/ec2/subnets", method: "POST", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [
+    apiEndpointKeys.aws.ec2.subnets.delete,
+    { path: "/ec2/subnets/:subnetId", method: "DELETE", telemetry: { provider: "aws", service: "ec2" } },
+  ],
+  [apiEndpointKeys.aws.ec2.internetGateways.list,   { path: "/ec2/internet-gateways", method: "GET", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.internetGateways.create, { path: "/ec2/internet-gateways", method: "POST", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.internetGateways.attach, { path: "/ec2/internet-gateways/:igwId/attach", method: "POST", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.internetGateways.detach, { path: "/ec2/internet-gateways/:igwId/detach", method: "POST", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.internetGateways.delete, { path: "/ec2/internet-gateways/:igwId", method: "DELETE", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.natGateways.list,        { path: "/ec2/nat-gateways", method: "GET", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.natGateways.create,      { path: "/ec2/nat-gateways", method: "POST", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.natGateways.delete,      { path: "/ec2/nat-gateways/:natId", method: "DELETE", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.routeTables.list,        { path: "/ec2/route-tables", method: "GET", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.routeTables.create,      { path: "/ec2/route-tables", method: "POST", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.routeTables.delete,      { path: "/ec2/route-tables/:rtbId", method: "DELETE", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.routeTables.createRoute, { path: "/ec2/route-tables/:rtbId/routes", method: "POST", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.routeTables.deleteRoute, { path: "/ec2/route-tables/:rtbId/routes", method: "DELETE", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.routeTables.associate,   { path: "/ec2/route-tables/:rtbId/associations", method: "POST", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.routeTables.disassociate,{ path: "/ec2/route-table-associations/:associationId", method: "DELETE", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.elasticIps.list,         { path: "/ec2/elastic-ips", method: "GET", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.elasticIps.create,       { path: "/ec2/elastic-ips", method: "POST", telemetry: { provider: "aws", service: "ec2" } }],
+  [apiEndpointKeys.aws.ec2.elasticIps.delete,       { path: "/ec2/elastic-ips/:allocationId", method: "DELETE", telemetry: { provider: "aws", service: "ec2" } }],
 
   // TODO: migrate remaining services into this registry.
 ]);

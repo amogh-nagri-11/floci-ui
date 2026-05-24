@@ -90,7 +90,7 @@ function normalizeCloud(value?: string): CloudProvider | null {
 }
 
 function normalizeService(value?: string): CloudServiceType | null {
-    return value === 'storage' || value === 'k8s' || value === 'database' ? value : null
+    return value === 'storage' || value === 'k8s' || value === 'database' || value === 'compute' ? value : null
 }
 
 function RuntimeCard({
