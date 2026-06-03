@@ -105,8 +105,39 @@ export function azureStorageSchema(): ServiceSchema {
     }
 }
 
+export function gcpStorageSchema(): ServiceSchema {
+    return {
+        cloud: 'gcp',
+        service: 'storage',
+        displayName: 'Google Cloud Storage',
+        fields: [
+            {
+                name: 'bucketName',
+                label: 'Bucket Name',
+                type: 'text',
+                required: true,
+                description: '3-63 characters. Lowercase letters, numbers, dots, underscores, and hyphens.',
+                validation: {
+                    pattern: '^[a-z0-9][a-z0-9._-]{1,61}[a-z0-9]$',
+                    minLength: 3,
+                    maxLength: 63,
+                    message: 'Use a valid GCS bucket name: 3-63 lowercase characters, numbers, dots, underscores, or hyphens.',
+                },
+            },
+        ],
+        actions: ['list', 'create', 'delete', 'inspect'],
+        capabilities: {
+            resourceActions: storageResourceActions,
+            objectActions: storageObjectActions,
+        },
+        filters: storageFilters,
+        columns: storageColumns,
+    }
+}
+
 export function storageSchemaFor(cloud: CloudProvider): ServiceSchema | null {
     if (cloud === 'aws') return awsStorageSchema()
     if (cloud === 'azure') return azureStorageSchema()
+    if (cloud === 'gcp') return gcpStorageSchema()
     return null
 }

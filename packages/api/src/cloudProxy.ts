@@ -5,6 +5,7 @@ import {AwsDatabaseAdapter} from './adapter-aws/AwsDatabaseAdapter'
 import {AwsEksAdapter} from './adapter-aws/AwsEksAdapter'
 import {AwsStorageAdapter} from './adapter-aws/AwsStorageAdapter'
 import {AzureStorageAdapter} from './adapter-azure/AzureStorageAdapter'
+import {GcpStorageAdapter} from './adapter-gcp/GcpStorageAdapter'
 import {CloudProxyService} from './service/CloudProxyService'
 
 export function createCloudProxyService(): CloudProxyService {
@@ -15,6 +16,7 @@ export function createCloudProxyService(): CloudProxyService {
         new AwsComputeAdapter(),
         new AwsNetworkingAdapter(),
         new AzureStorageAdapter(),
+        new GcpStorageAdapter(),
     ])
 
     return new CloudProxyService(registry)

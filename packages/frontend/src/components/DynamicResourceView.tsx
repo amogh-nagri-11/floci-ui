@@ -14,18 +14,19 @@ import {StorageObjectBrowser} from '@/components/StorageObjectBrowser'
 import {ComputePanel, LaunchInstanceForm} from '@/components/ComputePanel'
 import {NetworkingPanel} from '@/components/NetworkingPanel'
 import {capabilityEnabled, capabilityFor, capabilitySummary, normalizeCapabilities, withRuntimeState} from '@/lib/capabilities'
-import type {CloudProvider, CloudServiceType, CloudStatus} from '@/types/cloud'
+import type {CloudAvailability, CloudProvider, CloudServiceType, CloudStatus} from '@/types/cloud'
 import type {CloudResource, StorageObject} from '@/types/resource'
-import type {ServiceSchema} from '@/types/schema'
+import type {CapabilitySchema, ResourceActionName, ServiceSchema} from '@/types/schema'
 
 interface DynamicResourceViewProps {
     cloud: CloudProvider
     service: CloudServiceType
+    serviceAvailability?: CloudAvailability
     cloudStatus?: CloudStatus
     statusLoading?: boolean
 }
 
-export function DynamicResourceView({cloud, service, cloudStatus, statusLoading = false}: DynamicResourceViewProps) {
+export function DynamicResourceView({cloud, service, serviceAvailability = 'coming_soon', cloudStatus, statusLoading = false}: DynamicResourceViewProps) {
     const qc = useQueryClient()
     const [search, setSearch] = useState('')
     const [selected, setSelected] = useState<CloudResource | undefined>()
@@ -41,7 +42,7 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
     const resourcesQuery = useQuery({
         queryKey: resourcesKey,
         queryFn: ({signal}) => listCloudResources(cloud, service, search, signal),
-        enabled: schemaQuery.isSuccess && cloudStatus?.runtime === 'reachable',
+        enabled: schemaQuery.isSuccess && serviceAvailability === 'available' && cloudStatus?.runtime === 'reachable',
     })
 
     const createMut = useMutation({
@@ -105,8 +106,15 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
     const canCreate = schema.actions.includes('create')
     const activeSelected = selected?.cloud === cloud && selected.service === service ? selected : undefined
     const runtimeReachable = cloudStatus?.runtime === 'reachable'
-    const resourceCapabilities = withRuntimeState(normalizeCapabilities(schema.capabilities?.resourceActions), runtimeReachable)
-    const objectCapabilities = withRuntimeState(normalizeCapabilities(schema.capabilities?.objectActions), runtimeReachable)
+    const resourceCapabilityInputs = schema.capabilities?.resourceActions ?? schema.actions
+    const resourceCapabilities = withServiceAvailability(
+        withRuntimeState(normalizeCapabilities(resourceCapabilityInputs), runtimeReachable),
+        serviceAvailability,
+    )
+    const objectCapabilities = withServiceAvailability(
+        withRuntimeState(normalizeCapabilities(schema.capabilities?.objectActions), runtimeReachable),
+        serviceAvailability,
+    )
     const capabilityState = capabilitySummary([...resourceCapabilities, ...objectCapabilities])
     const createCapability = capabilityFor(resourceCapabilities, 'create')
     const createResourceLabel = resourceCreateLabel(schema)
@@ -118,9 +126,10 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
                 ? 'Runtime unavailable'
                 : 'Coming soon'
     const runtimeClass = cloudStatus?.runtime === 'unavailable' ? 'unavailable' : cloudStatus?.runtime === 'reachable' ? 'ready' : 'pending'
-    const adapterState = cloudStatus?.adapterRegistered ? 'Adapter ready' : 'Adapter pending'
-    const resourceState = resourceStateFor(cloudStatus, statusLoading, resourcesQuery.isLoading, resourcesQuery.isError)
-    const canUseRuntime = runtimeReachable
+    const adapterAvailable = serviceAvailability === 'available'
+    const adapterState = adapterAvailable ? 'Adapter ready' : 'Adapter pending'
+    const resourceState = resourceStateFor(cloudStatus, statusLoading, serviceAvailability, resourcesQuery.isLoading, resourcesQuery.isError)
+    const canUseRuntime = runtimeReachable && adapterAvailable
     const canCreateResource = canUseRuntime && capabilityEnabled(createCapability)
     const capabilitiesLabel = capabilityState.blocked > 0
         ? `${capabilityState.blocked} blocked`
@@ -139,7 +148,7 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
                     </div>
                     <div className="schema-action-list">
                         <span className={`runtime-state ${runtimeClass}`}>{runtimeState}</span>
-                        <span className={`runtime-state ${cloudStatus?.adapterRegistered ? 'ready' : 'pending'}`}>{adapterState}</span>
+                        <span className={`runtime-state ${adapterAvailable ? 'ready' : 'pending'}`}>{adapterState}</span>
                         <span className={`runtime-state ${capabilitiesClass}`}>{capabilitiesLabel}</span>
                         <span className={`runtime-state ${resourceState.className}`}>{resourceState.label}</span>
                         <span className="schema-action resource-count">{resources.length} resources</span>
@@ -207,6 +216,7 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
                             deletingId: deleteMut.variables?.id,
                             cloudStatus,
                             statusLoading,
+                            serviceAvailability,
                             resourcesLoading: resourcesQuery.isLoading,
                             resourcesError: resourcesQuery.error,
                             onSelect: setSelected,
@@ -217,7 +227,14 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
                 <ResourceInspector resource={activeSelected} object={selectedObject}/>
             </div>
             {service === 'storage' && (
-                <StorageObjectBrowser cloud={cloud} resource={selected} selectedObjectKey={selectedObject?.key} onSelectObject={setSelectedObject}/>
+                <StorageObjectBrowser
+                    cloud={cloud}
+                    resource={selected}
+                    capabilities={objectCapabilities}
+                    runtimeReachable={canUseRuntime}
+                    selectedObjectKey={selectedObject?.key}
+                    onSelectObject={setSelectedObject}
+                />
             )}
             {service === 'compute' && (
                 <ComputePanel cloud={cloud} resource={activeSelected} runtimeReachable={runtimeReachable}/>
@@ -227,6 +244,19 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
             )}
         </div>
     )
+}
+
+function withServiceAvailability<TAction extends ResourceActionName | 'upload' | 'download' | 'createFolder' | 'copy'>(
+    capabilities: Array<CapabilitySchema<TAction>>,
+    serviceAvailability: CloudAvailability,
+): Array<CapabilitySchema<TAction>> {
+    if (serviceAvailability === 'available') return capabilities
+    return capabilities.map((capability) => ({
+        ...capability,
+        enabled: false,
+        status: 'coming_soon',
+        reason: 'This provider service schema is available, but no runtime adapter is registered yet.',
+    }))
 }
 
 function capabilityDetail(capabilities: ReturnType<typeof normalizeCapabilities>): string {
@@ -276,10 +306,12 @@ function StatusTile({label, value, state}: {label: string; value: string; state:
 function resourceStateFor(
     status: CloudStatus | undefined,
     statusLoading: boolean,
+    serviceAvailability: CloudAvailability,
     resourcesLoading: boolean,
     resourcesError: boolean,
 ): {label: string; className: 'ready' | 'pending' | 'unavailable'} {
     if (statusLoading) return {label: 'Checking resources', className: 'pending'}
+    if (serviceAvailability !== 'available') return {label: 'Adapter pending', className: 'pending'}
     if (status?.runtime === 'unavailable') return {label: 'Resources blocked', className: 'unavailable'}
     if (status?.runtime === 'coming_soon') return {label: 'Resources pending', className: 'pending'}
     if (resourcesLoading) return {label: 'Loading resources', className: 'pending'}
@@ -294,6 +326,7 @@ function renderResourceSurface({
     deletingId,
     cloudStatus,
     statusLoading,
+    serviceAvailability,
     resourcesLoading,
     resourcesError,
     onSelect,
@@ -305,6 +338,7 @@ function renderResourceSurface({
     deletingId?: string
     cloudStatus?: CloudStatus
     statusLoading: boolean
+    serviceAvailability: CloudAvailability
     resourcesLoading: boolean
     resourcesError: unknown
     onSelect: (resource: CloudResource) => void
@@ -312,6 +346,15 @@ function renderResourceSurface({
 }) {
     if (statusLoading) {
         return <RuntimeNotice title="Checking runtime" detail="Waiting for the proxy to confirm the selected cloud runtime." state="pending"/>
+    }
+    if (serviceAvailability !== 'available') {
+        return (
+            <RuntimeNotice
+                title="Adapter coming soon"
+                detail={`${schema.displayName} uses the same normalized schema, but a runtime adapter is not registered yet.`}
+                state="pending"
+            />
+        )
     }
     if (cloudStatus?.runtime === 'unavailable') {
         return (

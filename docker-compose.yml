@@ -1,15 +1,46 @@
 services:
   floci-ui:
-    image: floci/floci-ui:latest
+    build:
+      context: ./packages/frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./packages/frontend/src:/app/src
+      - ./packages/frontend/index.html:/app/index.html
+      - ./packages/frontend/vite.config.ts:/app/vite.config.ts
+      - ./packages/frontend/tsconfig.json:/app/tsconfig.json
+      - ./packages/frontend/tsconfig.node.json:/app/tsconfig.node.json
     ports:
       - "3000:3000"
     environment:
+      API_TARGET: http://floci-api:3001
+      VITE_USE_POLLING: "true"
+    depends_on:
+      - floci-api
+    networks:
+      - floci_default
+
+  floci-api:
+    build:
+      context: ./packages/api
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./packages/api/src:/app/src
+    ports:
+      - "3001:3001"
+    environment:
       FLOCI_ENDPOINT: http://floci:4566
+      FLOCI_AZURE_ENDPOINT: http://floci-az:4577
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
+      FLOCI_GCP_ENDPOINT: http://floci-gcp:4588
+      FLOCI_GCP_PROJECT: floci-local
+      PORT: "3001"
     depends_on:
       - floci
+      - floci-az
+      - floci-gcp
+      - floci-seed
     networks:
       - floci_default
 
@@ -28,6 +59,37 @@ services:
         aliases:
           - localhost.floci.io
 
+  floci-az:
+    image: floci/floci-az
+    ports:
+      - "4577:4577"
+    networks:
+      - floci_default
+
+  floci-gcp:
+    image: floci/floci-gcp
+    ports:
+      - "4588:4588"
+    networks:
+      - floci_default
+
+  floci-seed:
+    image: floci/floci-gcp
+    command: ["/bin/sh", "/etc/floci/init/seed-clouds.sh"]
+    volumes:
+      - ./init:/etc/floci/init:ro
+    environment:
+      FLOCI_AZURE_ENDPOINT: http://floci-az:4577
+      FLOCI_AZURE_ACCOUNT_NAME: devstoreaccount1
+      FLOCI_GCP_ENDPOINT: http://floci-gcp:4588
+      FLOCI_GCP_PROJECT: floci-local
+    depends_on:
+      - floci-az
+      - floci-gcp
+    networks:
+      - floci_default
+
 networks:
   floci_default:
     name: floci_default
+    # external: true

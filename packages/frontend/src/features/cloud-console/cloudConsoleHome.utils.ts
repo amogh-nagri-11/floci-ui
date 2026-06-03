@@ -1,7 +1,7 @@
 import type {CloudProvider, CloudStatus} from '@/types/cloud'
 
 export function runtimeEndpointLabel(cloud: CloudProvider, status?: CloudStatus): string {
-    return status?.endpoint ?? (cloud === 'aws' ? 'http://localhost:4566' : cloud === 'azure' ? 'http://localhost:4577' : 'Future Floci-GP')
+    return status?.endpoint ?? (cloud === 'aws' ? 'http://localhost:4566' : cloud === 'azure' ? 'http://localhost:4577' : 'http://localhost:4588')
 }
 
 export function runtimeLabelFor(status: CloudStatus | undefined, loading: boolean): string {
@@ -20,12 +20,13 @@ export function runtimeClassFor(status: CloudStatus | undefined, loading: boolea
 export function runtimeDetailFor(cloud: CloudProvider, status?: CloudStatus): string {
     if (status?.runtime === 'reachable') return 'Connected through Cloud Proxy API'
     if (status?.runtime === 'unavailable') return 'Start the selected runtime to load resources'
-    if (cloud === 'gcp') return 'Adapter placeholder only'
+    if (cloud === 'gcp') return 'Waiting for Floci-GCP runtime status'
     return 'Waiting for runtime status'
 }
 
 export function activeServicesDetailFor(cloud: CloudProvider): string {
     if (cloud === 'aws') return 'Storage, k8s Engine, and Database are wired'
+    if (cloud === 'gcp') return 'Storage is wired through Floci-GCP'
     return 'Storage only for this multi-cloud pass'
 }
 
@@ -42,6 +43,7 @@ export function resourceDetailFor(
     if (resourcesLoading) return 'Loading normalized resources'
     if (resourcesError) return 'Resource load failed'
     if (cloud === 'aws') return 'Storage, k8s Engine, and Database resources'
+    if (cloud === 'gcp') return 'Cloud Storage resources'
     return 'Normalized storage resources'
 }
 
@@ -55,22 +57,22 @@ export function serviceMetaLabel(status: CloudStatus | undefined, loading: boole
 export function cloudName(cloud: CloudProvider): string {
     if (cloud === 'aws') return 'AWS Local Runtime'
     if (cloud === 'azure') return 'Azure Local Runtime'
-    return 'GCP Coming Soon'
+    return 'GCP Local Runtime'
 }
 
 export function providerDescription(cloud: CloudProvider): string {
     if (cloud === 'aws') return 'Storage is backed by Floci AWS Core through the unified Cloud Proxy API.'
     if (cloud === 'azure') return 'Storage is backed by Floci-AZ through the same normalized storage contract.'
-    return 'GCP appears as a placeholder so the layout stays ready for a future adapter.'
+    return 'Storage is backed by Floci-GCP through the same normalized storage contract.'
 }
 
 export function adapterLabel(cloud: CloudProvider, status?: CloudStatus): string {
-    if (cloud === 'gcp' || !status?.adapterRegistered) return 'Coming soon'
+    if (!status?.adapterRegistered) return 'Coming soon'
     return `${cloud.toUpperCase()} Adapter`
 }
 
 export function runtimeName(cloud: CloudProvider): string {
     if (cloud === 'aws') return 'Floci AWS Core'
     if (cloud === 'azure') return 'Floci-AZ'
-    return 'Future Floci-GP'
+    return 'Floci-GCP'
 }

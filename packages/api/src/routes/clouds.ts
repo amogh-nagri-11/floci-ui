@@ -27,7 +27,7 @@ export function createCloudRoutes(service: CloudProxyService = createCloudProxyS
         if (!isCloudProvider(cloud) || !isServiceType(serviceType)) return c.json({error: 'Unknown cloud or service'}, 404)
 
         const schema = service.schema(cloud, serviceType)
-        if (!schema || service.services(cloud).find((item) => item.service === serviceType)?.availability !== 'available') {
+        if (!schema) {
             return c.json({error: 'Schema not available'}, 404)
         }
 

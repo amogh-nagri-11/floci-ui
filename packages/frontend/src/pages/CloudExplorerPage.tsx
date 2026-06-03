@@ -79,7 +79,13 @@ export function CloudExplorerPage() {
                         <small>{statusQuery.data?.endpoint ?? 'No runtime endpoint'}</small>
                     </div>
                 </div>
-                <DynamicResourceView cloud={cloud} service={service} cloudStatus={statusQuery.data} statusLoading={statusQuery.isLoading}/>
+                <DynamicResourceView
+                    cloud={cloud}
+                    service={service}
+                    serviceAvailability={selectedService?.availability}
+                    cloudStatus={statusQuery.data}
+                    statusLoading={statusQuery.isLoading}
+                />
             </div>
         </>
     )
@@ -128,7 +134,7 @@ function runtimeValue(cloud: CloudProvider, status?: CloudStatus): string {
     if (status?.endpoint) return status.endpoint.replace(/^https?:\/\//, '')
     if (cloud === 'aws') return 'localhost:4566'
     if (cloud === 'azure') return 'localhost:4577'
-    return 'Future Floci-GP'
+    return 'localhost:4588'
 }
 
 function runtimeDetail(status?: CloudStatus, loading?: boolean): string {
@@ -156,8 +162,8 @@ function adapterDetail(status?: CloudStatus, loading?: boolean): string {
     return status.adapterRegistered ? 'Adapter ready' : 'Coming soon'
 }
 
-function adapterState(cloud: CloudProvider, status?: CloudStatus): 'ready' | 'pending' | 'unavailable' {
-    if (cloud === 'gcp' || !status || !status.adapterRegistered) return 'pending'
+function adapterState(_cloud: CloudProvider, status?: CloudStatus): 'ready' | 'pending' | 'unavailable' {
+    if (!status || !status.adapterRegistered) return 'pending'
     return 'ready'
 }
 

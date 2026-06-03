@@ -67,10 +67,38 @@ describe('cloud schema routes', () => {
         expect(body.fields[0].name).toBe('containerName')
     })
 
-    test('keeps GCP as coming soon without schema', async () => {
+    test('returns GCP storage schema', async () => {
         const res = await appWithRoutes().request('/api/clouds/gcp/services/storage/schema')
+        const body = await res.json()
 
-        expect(res.status).toBe(404)
+        expect(res.status).toBe(200)
+        expect(body.cloud).toBe('gcp')
+        expect(body.service).toBe('storage')
+        expect(body.fields[0].name).toBe('bucketName')
+    })
+
+    test('returns provider k8s schemas without registered adapters', async () => {
+        const azureRes = await appWithRoutes().request('/api/clouds/azure/services/k8s/schema')
+        const azureBody = await azureRes.json()
+        const gcpRes = await appWithRoutes().request('/api/clouds/gcp/services/k8s/schema')
+        const gcpBody = await gcpRes.json()
+
+        expect(azureRes.status).toBe(200)
+        expect(azureBody.displayName).toBe('Azure AKS')
+        expect(gcpRes.status).toBe(200)
+        expect(gcpBody.displayName).toBe('Google GKE')
+    })
+
+    test('returns provider database schemas without registered adapters', async () => {
+        const azureRes = await appWithRoutes().request('/api/clouds/azure/services/database/schema')
+        const azureBody = await azureRes.json()
+        const gcpRes = await appWithRoutes().request('/api/clouds/gcp/services/database/schema')
+        const gcpBody = await gcpRes.json()
+
+        expect(azureRes.status).toBe(200)
+        expect(azureBody.displayName).toBe('Azure SQL Database')
+        expect(gcpRes.status).toBe(200)
+        expect(gcpBody.displayName).toBe('Cloud SQL')
     })
 
     test('returns AWS cloud status', async () => {
@@ -83,14 +111,15 @@ describe('cloud schema routes', () => {
         expect(body.runtime).toBe('reachable')
     })
 
-    test('returns GCP as coming soon in cloud status', async () => {
+    test('returns GCP runtime status without a registered adapter', async () => {
         const res = await appWithRoutes().request('/api/clouds/gcp/status')
         const body = await res.json()
 
         expect(res.status).toBe(200)
         expect(body.cloud).toBe('gcp')
         expect(body.adapterRegistered).toBe(false)
-        expect(body.runtime).toBe('coming_soon')
+        expect(body.runtime).toBe('unavailable')
+        expect(body.endpoint).toBe('http://localhost:4588')
     })
 
     test('lists storage objects through the cloud adapter', async () => {

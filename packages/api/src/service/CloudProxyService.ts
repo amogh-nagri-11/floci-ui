@@ -14,7 +14,10 @@ import type {
 import {storageSchemaFor} from '../cloud-spi/storageSchema'
 import {CloudAdapterRegistry} from '../registry/CloudAdapterRegistry'
 import {serverlessSchemaFor} from '../cloud-spi/serverlessSchema'
+import {k8sSchemaFor} from '../cloud-spi/eksSchema'
+import {databaseSchemaFor} from '../cloud-spi/databaseSchema'
 import {azureEndpoint} from '../azure'
+import {checkGcpRuntime, gcpEndpoint} from '../gcp'
 
 export class CloudProxyService {
     constructor(private readonly registry: CloudAdapterRegistry) {}
@@ -23,7 +26,7 @@ export class CloudProxyService {
         return [
             {id: 'aws', displayName: 'AWS', availability: 'available'},
             {id: 'azure', displayName: 'Azure', availability: 'available'},
-            {id: 'gcp', displayName: 'GCP Coming Soon', availability: 'coming_soon'},
+            {id: 'gcp', displayName: 'GCP', availability: 'available'},
         ]
     }
 
@@ -73,12 +76,38 @@ export class CloudProxyService {
         const adapter = this.registry.get(cloud, service)
         if (adapter) return adapter.schema()
         if (service === 'storage') return storageSchemaFor(cloud)
+        if (service === 'k8s') return k8sSchemaFor(cloud)
+        if (service === 'database') return databaseSchemaFor(cloud)
+        if (service === 'serverless') return serverlessSchemaFor(cloud)
         return null
     }
 
     async status(cloud: CloudProvider): Promise<CloudStatus> {
         const adapter = this.registry.get(cloud, 'storage')
-        if (cloud === 'gcp' || !adapter) {
+        if (cloud === 'gcp') {
+            try {
+                await checkGcpRuntime()
+                return {
+                    cloud,
+                    adapterRegistered: Boolean(adapter),
+                    runtime: 'reachable',
+                    endpoint: endpointFor(cloud),
+                    checkedAt: new Date().toISOString(),
+                    error: null,
+                }
+            } catch (error) {
+                return {
+                    cloud,
+                    adapterRegistered: Boolean(adapter),
+                    runtime: 'unavailable',
+                    endpoint: endpointFor(cloud),
+                    checkedAt: new Date().toISOString(),
+                    error: error instanceof Error ? error.message : 'Runtime check failed',
+                }
+            }
+        }
+
+        if (!adapter) {
             return {
                 cloud,
                 adapterRegistered: false,
@@ -167,5 +196,6 @@ export class CloudProxyService {
 function endpointFor(cloud: CloudProvider): string | null {
     if (cloud === 'aws') return process.env.FLOCI_ENDPOINT ?? 'http://localhost:4566'
     if (cloud === 'azure') return azureEndpoint()
+    if (cloud === 'gcp') return gcpEndpoint()
     return null
 }

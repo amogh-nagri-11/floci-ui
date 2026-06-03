@@ -81,7 +81,7 @@ export interface ServiceSchema {
 export interface CloudResource {
     id: string
     name: string
-    cloud: Extract<CloudProvider, 'aws' | 'azure'>
+    cloud: CloudProvider
     service: CloudServiceType
     type: 'bucket' | 'container' | 'cluster' | 'db-instance' | 'instance' | 'image' | 'vpc'
     region: string | null
@@ -122,7 +122,7 @@ export interface CreateResourceInput {
 }
 
 export interface CloudServiceAdapter {
-    readonly cloud: Extract<CloudProvider, 'aws' | 'azure'>
+    readonly cloud: CloudProvider
     readonly service: CloudServiceType
     schema(): ServiceSchema
     list(query?: ResourceQuery): Promise<CloudResource[]>
