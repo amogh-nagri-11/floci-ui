@@ -172,7 +172,7 @@ integrated into the unified Cloud Explorer model.
 | Function | 90% AWS legacy | Coming soon | Coming soon | AWS Lambda has a mature AWS-specific page for list, inspect, invoke, log tail, environment variables, and delete. It is not yet exposed as a unified Cloud Explorer `function/serverless` service in the frontend sidebar. |
 | Events | 90% AWS legacy | Coming soon | Coming soon | AWS SNS has a mature AWS-specific page for topics, subscriptions, and publish. A normalized eventing category is not wired yet. |
 | Observability | 90% AWS legacy | Coming soon | Coming soon | AWS CloudWatch has a mature AWS-specific page for logs, metrics list, alarms list, and Floci request ingestion. A normalized multi-cloud observability category is not wired yet. |
-| Security / Identity | Placeholder | Placeholder | Placeholder | IAM, KMS, Secrets Manager, Cognito, and related services remain placeholders in the UI. |
+| Security / Identity | 80% AWS legacy (Secrets Manager) | Coming soon | Coming soon | AWS Secrets Manager has a dedicated page for listing secrets, inspecting metadata, revealing/editing values, creating, and deleting. IAM, KMS, Cognito, and Systems Manager remain placeholders in the UI. |
 
 Connected Cloud Explorer categories today:
 
@@ -192,12 +192,13 @@ AWS-specific legacy pages still available today:
 - SNS
 - EKS
 - RDS
+- Secrets Manager
 
 Placeholder or not-yet-normalized categories today:
 
 - Azure Compute, Networking, k8s, Database, Queue, Function, Events, Observability.
 - GCP all categories.
-- IAM, KMS, Secrets Manager, Cognito, Systems Manager, ElastiCache.
+- IAM, KMS, Cognito, Systems Manager, ElastiCache.
 
 ## Category Detail
 
@@ -457,11 +458,28 @@ Current status:
 
 - IAM is a placeholder.
 - KMS is a placeholder.
-- Secrets Manager is a placeholder.
+- Secrets Manager has a dedicated AWS-specific page.
 - Cognito is a placeholder.
 - Systems Manager is a placeholder.
 
-These categories are intentionally visible so users can see the intended console shape, but they should not show fake
+AWS Secrets Manager support:
+
+- Entry point: `/secretsmanager`.
+- List secrets with name, description, last-changed time, and tag count.
+- Inspect secret metadata: ARN, description, KMS key, rotation state, version ids, timestamps, and tags.
+- Reveal the current secret value on demand, with copy to clipboard. Values stay hidden until explicitly requested.
+- Create a secret with a plaintext or JSON value.
+- Update the value, which stores a new version.
+- Delete a secret, with an optional force delete that skips the 7-day recovery window.
+
+Verification: the operations above were exercised end-to-end through the UI against the bundled Floci runtime
+(`floci/floci:latest-compat` on `:4566`, started via `docker compose -f docker-compose.dev.yml up`): create, list,
+describe, reveal, update (new version id issued), and force delete all succeeded with `200` responses. `GET
+/secret/value` returns `Cache-Control: no-store`, and requests with a missing id or a malformed JSON body return `400`.
+Route behaviour is additionally covered by unit tests in `packages/api/src/routes/secretsmanager.test.ts` (AWS client
+stubbed).
+
+Remaining placeholders are intentionally visible so users can see the intended console shape, but they do not show fake
 resources or demo data.
 
 </details>

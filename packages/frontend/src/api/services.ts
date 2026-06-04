@@ -78,7 +78,7 @@ export const SERVICE_META: Array<{
     name: "secretsmanager",
     displayName: "Secrets Manager",
     route: "/secretsmanager",
-    implemented: false,
+    implemented: true,
     resourceLabel: "secrets",
   },
   {
@@ -238,6 +238,7 @@ export async function listServiceResources(
   if (service === "eks") return listEksResources(signal);
   if (service === "rds") return listRdsResources(signal);
   if (service === "dynamodb") return listDynamoDbTables(signal);
+  if (service === "secretsmanager") return listSecretResources(signal);
   if (service === "cloudwatch") return listAwsCloudWatchResources(signal);
   return [];
 }
@@ -846,6 +847,130 @@ export async function deleteDynamoDbItem(
     `/dynamodb/${encodeURIComponent(tableName)}/items/delete`,
     "dynamodb",
     { key },
+    signal,
+  );
+}
+
+// ─── Secrets Manager ────────────────────────────────────────────────────────────
+
+export interface SecretTag {
+  key: string;
+  value: string;
+}
+
+export interface SecretSummary {
+  name: string;
+  arn?: string;
+  description?: string;
+  rotationEnabled: boolean;
+  kmsKeyId?: string;
+  lastChangedDate?: string;
+  lastAccessedDate?: string;
+  createdDate?: string;
+  tags: SecretTag[];
+}
+
+export interface SecretDetail extends SecretSummary {
+  deletedDate?: string;
+  versionIds: string[];
+}
+
+export interface SecretValue {
+  name: string;
+  arn?: string;
+  versionId?: string;
+  secretString?: string;
+  secretBinary?: string;
+  createdDate?: string;
+}
+
+async function listSecretResources(
+  signal?: AbortSignal,
+): Promise<ResourceSummary[]> {
+  const secrets = await listSecrets(signal);
+  return secrets.map((s) => ({
+    id: s.arn ?? s.name,
+    name: s.name,
+    status: s.rotationEnabled ? "rotation enabled" : "available",
+    description: s.description,
+    metadata: {
+      lastChangedDate: s.lastChangedDate,
+      lastAccessedDate: s.lastAccessedDate,
+      createdDate: s.createdDate,
+      tagCount: s.tags.length,
+    },
+  }));
+}
+
+export async function listSecrets(
+  signal?: AbortSignal,
+): Promise<SecretSummary[]> {
+  return apiGet<SecretSummary[]>(
+    "/secretsmanager/secrets",
+    "secretsmanager",
+    signal,
+  );
+}
+
+export async function describeSecret(
+  id: string,
+  signal?: AbortSignal,
+): Promise<SecretDetail> {
+  return apiGet<SecretDetail>(
+    `/secretsmanager/secret?id=${encodeURIComponent(id)}`,
+    "secretsmanager",
+    signal,
+  );
+}
+
+export async function getSecretValue(
+  id: string,
+  signal?: AbortSignal,
+): Promise<SecretValue> {
+  return apiGet<SecretValue>(
+    `/secretsmanager/secret/value?id=${encodeURIComponent(id)}`,
+    "secretsmanager",
+    signal,
+  );
+}
+
+export async function createSecret(
+  name: string,
+  secretString: string,
+  description?: string,
+  signal?: AbortSignal,
+): Promise<{ name: string; arn?: string; versionId?: string }> {
+  return apiPost(
+    "/secretsmanager/secrets",
+    "secretsmanager",
+    { name, secretString, description },
+    signal,
+  );
+}
+
+export async function putSecretValue(
+  id: string,
+  secretString: string,
+  signal?: AbortSignal,
+): Promise<{ arn?: string; versionId?: string }> {
+  return apiPut(
+    "/secretsmanager/secret/value",
+    "secretsmanager",
+    { id, secretString },
+    signal,
+  );
+}
+
+export async function deleteSecret(
+  id: string,
+  force = false,
+  signal?: AbortSignal,
+): Promise<void> {
+  const params = new URLSearchParams({ id });
+  if (force) params.set("force", "true");
+  await apiDelete(
+    `/secretsmanager/secret?${params}`,
+    "secretsmanager",
     signal,
   );
 }

@@ -7,6 +7,7 @@ import {SQSPage} from '@/features/sqs/SQSPage'
 import {DynamoDBPage} from '@/features/dynamodb/DynamoDBPage'
 import {LambdaPage} from '@/features/lambda/LambdaPage'
 import {SNSPage} from '@/features/sns/SNSPage'
+import {SecretsManagerPage} from '@/features/secretsmanager/SecretsManagerPage'
 import {CloudExplorerPage} from '@/pages/CloudExplorerPage'
 import {CloudConsoleHomePage} from '@/pages/CloudConsoleHomePage'
 import {EKSPage} from '@/features/eks/EKSPage'
@@ -31,6 +32,7 @@ export default function App() {
                     <Route path="/rds" element={<RDSPage/>}/>
                     <Route path="/dynamodb" element={<DynamoDBPage/>}/>
                     <Route path="/sns" element={<SNSPage/>}/>
+                    <Route path="/secretsmanager" element={<SecretsManagerPage/>}/>
                     <Route path="/:service" element={<ServicePage/>}/>
                     <Route path="*" element={<Navigate to="/dashboard" replace/>}/>
                 </Route>
