@@ -12,6 +12,7 @@ build/
 
 # Tool caches
 .vite/
+.pnpm-store/
 .turbo/
 .parcel-cache/
 .cache/

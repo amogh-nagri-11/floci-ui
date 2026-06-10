@@ -89,12 +89,16 @@ export class AzureDatabaseAdapter implements CloudServiceAdapter {
     }
 
     async listCosmosItems(databaseId: string, containerId: string): Promise<CosmosItem[]> {
-        const body = await this.cosmosJson<CosmosListResponse<CosmosRecord>>(
-            `/dbs/${encodeSegment(databaseId)}/colls/${encodeSegment(containerId)}/docs`,
-            {method: 'GET'},
-            {emptyOnNotFound: true},
-        )
-        return (body?.Documents ?? []).map((document) => toItem(databaseId, containerId, document))
+        const [container, body] = await Promise.all([
+            this.getCosmosContainer(databaseId, containerId),
+            this.cosmosJson<CosmosListResponse<CosmosRecord>>(
+                `/dbs/${encodeSegment(databaseId)}/colls/${encodeSegment(containerId)}/docs`,
+                {method: 'GET'},
+                {emptyOnNotFound: true},
+            ),
+        ])
+        const pkPath = container ? partitionKeyPath(container) : '/id'
+        return (body?.Documents ?? []).map((document) => toItem(databaseId, containerId, document, pkPath))
     }
 
     async upsertCosmosItem(databaseId: string, containerId: string, document: Record<string, unknown>): Promise<CosmosItem> {
@@ -102,19 +106,30 @@ export class AzureDatabaseAdapter implements CloudServiceAdapter {
         const id = stringValue(document.id)
         if (!id) throw new Error('Cosmos document id is required')
 
-        const body = await this.cosmosJson<CosmosRecord>(`/dbs/${encodeSegment(databaseId)}/colls/${encodeSegment(containerId)}/docs`, {
-            method: 'POST',
-            body: JSON.stringify(document),
-            headers: {'x-ms-documentdb-is-upsert': 'True'},
-        })
+        const container = await this.getCosmosContainer(databaseId, containerId)
+        const pkPath = container ? partitionKeyPath(container) : '/id'
+        const body = await this.cosmosJson<CosmosRecord>(
+            `/dbs/${encodeSegment(databaseId)}/colls/${encodeSegment(containerId)}/docs`,
+            {
+                method: 'POST',
+                body: JSON.stringify(document),
+                headers: {
+                    'x-ms-documentdb-is-upsert': 'True',
+                    ...partitionKeyHeader(partitionKeyValue(document, pkPath)),
+                },
+            },
+        )
         if (!body) throw new Error('Cosmos document upsert returned an empty response')
-        return toItem(databaseId, containerId, body)
+        return toItem(databaseId, containerId, body, pkPath)
     }
 
-    async deleteCosmosItem(databaseId: string, containerId: string, itemId: string): Promise<void> {
+    async deleteCosmosItem(databaseId: string, containerId: string, itemId: string, partitionKey?: string | null): Promise<void> {
         await this.cosmosFetch(
             `/dbs/${encodeSegment(databaseId)}/colls/${encodeSegment(containerId)}/docs/${encodeSegment(itemId)}`,
-            {method: 'DELETE'},
+            {
+                method: 'DELETE',
+                headers: partitionKeyHeader(partitionKey ?? null),
+            },
         )
     }
 
@@ -135,6 +150,14 @@ export class AzureDatabaseAdapter implements CloudServiceAdapter {
         if (!body) throw new Error('Cosmos query returned an empty response')
         const items = body.Documents ?? []
         return {items, count: body._count ?? items.length}
+    }
+
+    private getCosmosContainer(databaseId: string, containerId: string): Promise<CosmosRecord | null> {
+        return this.cosmosJson<CosmosRecord>(
+            `/dbs/${encodeSegment(databaseId)}/colls/${encodeSegment(containerId)}`,
+            {method: 'GET'},
+            {emptyOnNotFound: true},
+        )
     }
 
     private cosmosFetch(path: string, init: RequestInit, options?: {emptyOnNotFound?: boolean}): Promise<Response | null> {
@@ -229,16 +252,33 @@ function toContainer(databaseId: string, container: CosmosRecord): CosmosContain
     }
 }
 
-function toItem(databaseId: string, containerId: string, document: CosmosRecord): CosmosItem {
+function toItem(databaseId: string, containerId: string, document: CosmosRecord, pkPath = '/id'): CosmosItem {
     return {
         id: stringValue(document.id),
         databaseId,
         containerId,
-        partitionKey: null,
+        partitionKey: partitionKeyValue(document, pkPath),
         etag: unquote(stringValue(document._etag)),
         timestamp: timestampToIso(document._ts),
         document,
     }
+}
+
+function partitionKeyValue(document: CosmosRecord, pkPath: string): string | null {
+    const segments = normalizePartitionKeyPath(pkPath).slice(1).split('/').filter(Boolean)
+    let current: unknown = document
+    for (const segment of segments) {
+        if (!isRecord(current)) return null
+        current = current[segment]
+    }
+    if (current === undefined || current === null) return null
+    if (typeof current === 'string') return current
+    if (typeof current === 'number' || typeof current === 'boolean') return String(current)
+    return JSON.stringify(current)
+}
+
+function partitionKeyHeader(partitionKey: string | null): Record<string, string> {
+    return partitionKey === null ? {} : {'x-ms-documentdb-partitionkey': JSON.stringify([partitionKey])}
 }
 
 function partitionKeyPath(container: CosmosRecord): string {

@@ -80,9 +80,9 @@ export function CosmosNoSqlPanel({cloud, resource, runtimeReachable}: CosmosNoSq
     })
 
     const deleteItemMut = useMutation({
-        mutationFn: (itemId: string) => deleteCosmosItem(cloud, databaseId ?? '', selectedContainerId ?? '', itemId),
-        onSuccess: (_, itemId) => {
-            if (selectedItem?.id === itemId) setSelectedItem(undefined)
+        mutationFn: (item: CosmosItem) => deleteCosmosItem(cloud, databaseId ?? '', selectedContainerId ?? '', item.id, item.partitionKey),
+        onSuccess: (_, item) => {
+            if (selectedItem?.id === item.id) resetDocumentEditor()
             setConfirmItem(null)
             void qc.invalidateQueries({queryKey: itemsKey})
         },
@@ -159,6 +159,7 @@ export function CosmosNoSqlPanel({cloud, resource, runtimeReachable}: CosmosNoSq
                     </button>
                 </form>
                 {createContainerMut.error instanceof Error && <div className="form-error">{createContainerMut.error.message}</div>}
+                {containersQuery.error instanceof Error && <div className="form-error">{containersQuery.error.message}</div>}
                 <div className="cosmos-list">
                     {containersQuery.isLoading && <div className="muted padded">Loading containers</div>}
                     {!containersQuery.isLoading && containers.length === 0 && <div className="muted padded">No containers</div>}
@@ -206,6 +207,8 @@ export function CosmosNoSqlPanel({cloud, resource, runtimeReachable}: CosmosNoSq
                         Refresh
                     </button>
                 </div>
+                {itemsQuery.error instanceof Error && <div className="form-error">{itemsQuery.error.message}</div>}
+                {deleteItemMut.error instanceof Error && <div className="form-error">{deleteItemMut.error.message}</div>}
                 <div className="cosmos-items-table">
                     <table className="table">
                         <thead>
@@ -224,7 +227,7 @@ export function CosmosNoSqlPanel({cloud, resource, runtimeReachable}: CosmosNoSq
                                     <td onClick={() => selectItem(item)}><code>{formatShort(item.etag)}</code></td>
                                     <td className="table-actions">
                                         {confirmItem === item.id ? (
-                                            <button className="button danger compact" type="button" onClick={() => deleteItemMut.mutate(item.id)}>Confirm</button>
+                                            <button className="button danger compact" type="button" onClick={() => deleteItemMut.mutate(item)}>Confirm</button>
                                         ) : (
                                             <button className="icon-btn danger" type="button" title={`Delete ${item.id}`} onClick={() => setConfirmItem(item.id)}>
                                                 <Trash2 size={13}/>
@@ -241,12 +244,17 @@ export function CosmosNoSqlPanel({cloud, resource, runtimeReachable}: CosmosNoSq
             </div>
 
             <div className="cosmos-column">
-                <PanelHeader icon={Code2} eyebrow="Document editor" title={selectedItem ? selectedItem.id : 'Create or edit'} detail="Upsert JSON document"/>
+                <PanelHeader icon={Code2} eyebrow="Document editor" title={selectedItem ? `Update ${selectedItem.id}` : 'Create document'} detail={selectedItem ? 'Edits replace the selected document' : 'Create a JSON document'}/>
                 <form className="cosmos-editor" onSubmit={submitDocument}>
                     <textarea className="textarea code-textarea" value={documentText} onChange={(event) => setDocumentText(event.target.value)} spellCheck={false}/>
+                    {selectedItem && (
+                        <button className="button" type="button" onClick={resetDocumentEditor}>
+                            New document
+                        </button>
+                    )}
                     <button className="button primary" type="submit" disabled={!selectedContainerId || upsertItemMut.isPending}>
                         <Plus size={14}/>
-                        {upsertItemMut.isPending ? 'Saving' : 'Upsert document'}
+                        {upsertItemMut.isPending ? 'Saving' : selectedItem ? 'Update document' : 'Create document'}
                     </button>
                     {saveError && <div className="form-error">{saveError}</div>}
                 </form>
@@ -265,7 +273,10 @@ export function CosmosNoSqlPanel({cloud, resource, runtimeReachable}: CosmosNoSq
                     </button>
                     {queryMut.error instanceof Error && <div className="form-error">{queryMut.error.message}</div>}
                     {activeQueryResult && (
-                        <pre className="cosmos-query-result">{JSON.stringify(activeQueryResult.items, null, 2)}</pre>
+                        <>
+                            <div className="muted">{activeQueryResult.count} query results</div>
+                            <pre className="cosmos-query-result">{JSON.stringify(activeQueryResult.items, null, 2)}</pre>
+                        </>
                     )}
                 </div>
             </div>
@@ -276,6 +287,13 @@ export function CosmosNoSqlPanel({cloud, resource, runtimeReachable}: CosmosNoSq
         setSelectedItem(item)
         setDocumentText(JSON.stringify(item.document, null, 2))
         setDocumentError(null)
+    }
+
+    function resetDocumentEditor() {
+        setSelectedItem(undefined)
+        setDocumentText('{\n  "id": ""\n}')
+        setDocumentError(null)
+        setConfirmItem(null)
     }
 }
 

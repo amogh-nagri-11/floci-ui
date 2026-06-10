@@ -163,6 +163,6 @@ export interface CloudServiceAdapter {
     deleteCosmosContainer?(databaseId: string, containerId: string): Promise<void>
     listCosmosItems?(databaseId: string, containerId: string): Promise<CosmosItem[]>
     upsertCosmosItem?(databaseId: string, containerId: string, document: Record<string, unknown>): Promise<CosmosItem>
-    deleteCosmosItem?(databaseId: string, containerId: string, itemId: string): Promise<void>
+    deleteCosmosItem?(databaseId: string, containerId: string, itemId: string, partitionKey?: string | null): Promise<void>
     queryCosmosItems?(databaseId: string, containerId: string, query: string): Promise<CosmosQueryResult>
 }

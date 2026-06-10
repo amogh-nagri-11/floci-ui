@@ -262,11 +262,15 @@ export async function deleteCosmosItem(
   databaseId: string,
   containerId: string,
   itemId: string,
+  partitionKey?: string | null,
   signal?: AbortSignal,
 ): Promise<void> {
   await apiClient.call<void>(
     apiEndpointKeys.clouds.database.cosmos.items.delete,
-    requestOptions(cloud, "database", { signal }),
+    requestOptions(cloud, "database", {
+      signal,
+      params: partitionKey ? { partitionKey } : undefined,
+    }),
     { ...databasePathParams(cloud, databaseId), containerId, itemId },
   );
 }

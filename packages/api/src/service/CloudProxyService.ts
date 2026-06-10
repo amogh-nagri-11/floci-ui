@@ -219,10 +219,10 @@ export class CloudProxyService {
         return adapter.upsertCosmosItem(databaseId, containerId, document)
     }
 
-    async deleteCosmosItem(cloud: CloudProvider, databaseId: string, containerId: string, itemId: string): Promise<void> {
+    async deleteCosmosItem(cloud: CloudProvider, databaseId: string, containerId: string, itemId: string, partitionKey?: string | null): Promise<void> {
         const adapter = this.requireAdapter(cloud, 'database')
         if (!adapter.deleteCosmosItem) throw new Error(`Cosmos item deletion is not supported for ${cloud}/database`)
-        await adapter.deleteCosmosItem(databaseId, containerId, itemId)
+        await adapter.deleteCosmosItem(databaseId, containerId, itemId, partitionKey)
     }
 
     async queryCosmosItems(cloud: CloudProvider, databaseId: string, containerId: string, query: string): Promise<CosmosQueryResult> {

@@ -46,6 +46,10 @@ describe('AzureDatabaseAdapter', () => {
                     partitionKey: {paths: ['/category'], kind: 'Hash'},
                 }],
             },
+            '/dbs/appdb/colls/items': {
+                id: 'items',
+                partitionKey: {paths: ['/category'], kind: 'Hash'},
+            },
             '/dbs/appdb/colls/items/docs': {
                 _count: 1,
                 Documents: [{id: 'item-1', category: 'demo', _etag: '"doc-etag"', _ts: 1779307201}],
@@ -61,9 +65,23 @@ describe('AzureDatabaseAdapter', () => {
             id: 'item-1',
             databaseId: 'appdb',
             containerId: 'items',
+            partitionKey: 'demo',
             etag: 'doc-etag',
             document: {id: 'item-1', category: 'demo', _etag: '"doc-etag"', _ts: 1779307201},
         }])
+    })
+
+    test('sends document partition key when deleting an item', async () => {
+        const calls: Array<{path: string; init: RequestInit}> = []
+        const adapter = new AzureDatabaseAdapter(testClient({
+            '/dbs/appdb/colls/items/docs/item-1': null,
+        }, calls))
+
+        await adapter.deleteCosmosItem('appdb', 'items', 'item-1', 'demo')
+
+        expect(calls[0].path).toBe('/dbs/appdb/colls/items/docs/item-1')
+        expect(calls[0].init.method).toBe('DELETE')
+        expect(calls[0].init.headers).toMatchObject({'x-ms-documentdb-partitionkey': '["demo"]'})
     })
 
     test('queries documents using the Cosmos SQL query endpoint', async () => {

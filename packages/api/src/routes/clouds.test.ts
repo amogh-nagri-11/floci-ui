@@ -2,7 +2,7 @@ import {describe, expect, test} from 'bun:test'
 import {Hono} from 'hono'
 import {azureDatabaseSchema} from '../cloud-spi/databaseSchema'
 import {awsStorageSchema, azureStorageSchema} from '../cloud-spi/storageSchema'
-import type {CloudResource, CloudServiceAdapter, CosmosContainer, CreateResourceInput} from '../cloud-spi/types'
+import type {CloudResource, CloudServiceAdapter, CosmosContainer, CosmosItem, CosmosQueryResult, CreateResourceInput} from '../cloud-spi/types'
 import {CloudAdapterRegistry} from '../registry/CloudAdapterRegistry'
 import {CloudProxyService} from '../service/CloudProxyService'
 import {createCloudRoutes} from './clouds'
@@ -166,6 +166,115 @@ describe('cloud schema routes', () => {
         expect(res.status).toBe(200)
         expect(body[0].databaseId).toBe('appdb')
         expect(body[0].name).toBe('items')
+    })
+
+    test('creates and deletes Cosmos databases through the cloud database adapter', async () => {
+        const deleted: string[] = []
+        const app = appWithRoutes([mockAdapter('azure', {
+            service: 'database',
+            schema: azureDatabaseSchema,
+            create: async (input: CreateResourceInput): Promise<CloudResource> => ({
+                id: String(input.values.databaseName),
+                name: String(input.values.databaseName),
+                cloud: 'azure',
+                service: 'database',
+                type: 'cosmos-database',
+                region: null,
+                createdAt: null,
+                metadata: {},
+            }),
+            delete: async (id: string) => {
+                deleted.push(id)
+            },
+        })])
+
+        const createRes = await app.request('/api/clouds/azure/services/database/resources', {
+            method: 'POST',
+            body: JSON.stringify({databaseName: 'appdb'}),
+        })
+        const created = await createRes.json()
+        const deleteRes = await app.request('/api/clouds/azure/services/database/resources/appdb', {method: 'DELETE'})
+
+        expect(createRes.status).toBe(201)
+        expect(created.type).toBe('cosmos-database')
+        expect(created.name).toBe('appdb')
+        expect(deleteRes.status).toBe(200)
+        expect(deleted).toEqual(['appdb'])
+    })
+
+    test('creates and deletes Cosmos containers through the cloud database adapter', async () => {
+        const deleted: Array<{databaseId: string; containerId: string}> = []
+        const app = appWithRoutes([mockAdapter('azure', {
+            service: 'database',
+            schema: azureDatabaseSchema,
+            createCosmosContainer: async (databaseId: string, input: CreateResourceInput): Promise<CosmosContainer> => ({
+                id: String(input.values.containerName),
+                name: String(input.values.containerName),
+                databaseId,
+                partitionKeyPath: String(input.values.partitionKeyPath),
+                createdAt: null,
+                metadata: {},
+            }),
+            deleteCosmosContainer: async (databaseId: string, containerId: string) => {
+                deleted.push({databaseId, containerId})
+            },
+        })])
+
+        const createRes = await app.request('/api/clouds/azure/services/database/resources/appdb/containers', {
+            method: 'POST',
+            body: JSON.stringify({containerName: 'items', partitionKeyPath: '/category'}),
+        })
+        const created = await createRes.json()
+        const deleteRes = await app.request('/api/clouds/azure/services/database/resources/appdb/containers/items', {method: 'DELETE'})
+
+        expect(createRes.status).toBe(201)
+        expect(created.databaseId).toBe('appdb')
+        expect(created.partitionKeyPath).toBe('/category')
+        expect(deleteRes.status).toBe(200)
+        expect(deleted).toEqual([{databaseId: 'appdb', containerId: 'items'}])
+    })
+
+    test('upserts, deletes, and queries Cosmos items through the cloud database adapter', async () => {
+        const deleted: Array<{databaseId: string; containerId: string; itemId: string; partitionKey?: string | null}> = []
+        const app = appWithRoutes([mockAdapter('azure', {
+            service: 'database',
+            schema: azureDatabaseSchema,
+            upsertCosmosItem: async (databaseId: string, containerId: string, document: Record<string, unknown>): Promise<CosmosItem> => ({
+                id: String(document.id),
+                databaseId,
+                containerId,
+                partitionKey: String(document.category),
+                etag: 'etag',
+                timestamp: null,
+                document,
+            }),
+            deleteCosmosItem: async (databaseId: string, containerId: string, itemId: string, partitionKey?: string | null) => {
+                deleted.push({databaseId, containerId, itemId, partitionKey})
+            },
+            queryCosmosItems: async (_databaseId: string, _containerId: string, query: string): Promise<CosmosQueryResult> => ({
+                items: [{id: 'item-1', query}],
+                count: 1,
+            }),
+        })])
+
+        const upsertRes = await app.request('/api/clouds/azure/services/database/resources/appdb/containers/items/items', {
+            method: 'POST',
+            body: JSON.stringify({id: 'item-1', category: 'demo'}),
+        })
+        const upserted = await upsertRes.json()
+        const queryRes = await app.request('/api/clouds/azure/services/database/resources/appdb/containers/items/query', {
+            method: 'POST',
+            body: JSON.stringify({query: 'SELECT * FROM c'}),
+        })
+        const queryBody = await queryRes.json()
+        const deleteRes = await app.request('/api/clouds/azure/services/database/resources/appdb/containers/items/items/item-1?partitionKey=demo', {method: 'DELETE'})
+
+        expect(upsertRes.status).toBe(201)
+        expect(upserted.partitionKey).toBe('demo')
+        expect(queryRes.status).toBe(200)
+        expect(queryBody.count).toBe(1)
+        expect(deleteRes.status).toBe(200)
+        expect(deleted).toEqual([{databaseId: 'appdb', containerId: 'items', itemId: 'item-1', partitionKey: 'demo'}])
     })
 
     test('normalizes runtime unavailable errors', async () => {

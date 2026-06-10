@@ -102,7 +102,7 @@ export function createCloudRoutes(service: CloudProxyService = createCloudProxyS
         if (!isCloudProvider(cloud)) return c.json({error: 'Unknown cloud'}, 404)
 
         return withRuntime(c, async () => {
-            await service.deleteCosmosItem(cloud, c.req.param('id'), c.req.param('containerId'), c.req.param('itemId'))
+            await service.deleteCosmosItem(cloud, c.req.param('id'), c.req.param('containerId'), c.req.param('itemId'), c.req.query('partitionKey') ?? null)
             return c.json({ok: true})
         })
     })
