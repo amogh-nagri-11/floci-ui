@@ -83,7 +83,7 @@ export interface CloudResource {
     name: string
     cloud: Extract<CloudProvider, 'aws' | 'azure'>
     service: CloudServiceType
-    type: 'bucket' | 'container' | 'cluster' | 'db-instance' | 'instance' | 'image' | 'vpc'
+    type: 'bucket' | 'container' | 'cluster' | 'db-instance' | 'cosmos-database' | 'instance' | 'image' | 'vpc'
     region: string | null
     createdAt: string | null
     status?: string | null
@@ -113,6 +113,30 @@ export interface StorageObjectDownload {
     contentLength: number | null
 }
 
+export interface CosmosContainer {
+    id: string
+    name: string
+    databaseId: string
+    partitionKeyPath: string
+    createdAt: string | null
+    metadata: Record<string, unknown>
+}
+
+export interface CosmosItem {
+    id: string
+    databaseId: string
+    containerId: string
+    partitionKey: string | null
+    etag: string | null
+    timestamp: string | null
+    document: Record<string, unknown>
+}
+
+export interface CosmosQueryResult {
+    items: Array<Record<string, unknown> | string | number | boolean | null>
+    count: number
+}
+
 export interface ResourceQuery {
     search?: string
 }
@@ -134,4 +158,11 @@ export interface CloudServiceAdapter {
     getObject?(resourceId: string, key: string): Promise<StorageObjectDownload>
     deleteObject?(resourceId: string, key: string): Promise<void>
     copyObject?(srcResourceId: string, srcKey: string, destKey: string, destResourceId?: string): Promise<void>
+    listCosmosContainers?(databaseId: string): Promise<CosmosContainer[]>
+    createCosmosContainer?(databaseId: string, input: CreateResourceInput): Promise<CosmosContainer>
+    deleteCosmosContainer?(databaseId: string, containerId: string): Promise<void>
+    listCosmosItems?(databaseId: string, containerId: string): Promise<CosmosItem[]>
+    upsertCosmosItem?(databaseId: string, containerId: string, document: Record<string, unknown>): Promise<CosmosItem>
+    deleteCosmosItem?(databaseId: string, containerId: string, itemId: string): Promise<void>
+    queryCosmosItems?(databaseId: string, containerId: string, query: string): Promise<CosmosQueryResult>
 }

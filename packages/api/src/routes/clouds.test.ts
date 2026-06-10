@@ -1,7 +1,8 @@
 import {describe, expect, test} from 'bun:test'
 import {Hono} from 'hono'
+import {azureDatabaseSchema} from '../cloud-spi/databaseSchema'
 import {awsStorageSchema, azureStorageSchema} from '../cloud-spi/storageSchema'
-import type {CloudResource, CloudServiceAdapter, CreateResourceInput} from '../cloud-spi/types'
+import type {CloudResource, CloudServiceAdapter, CosmosContainer, CreateResourceInput} from '../cloud-spi/types'
 import {CloudAdapterRegistry} from '../registry/CloudAdapterRegistry'
 import {CloudProxyService} from '../service/CloudProxyService'
 import {createCloudRoutes} from './clouds'
@@ -67,6 +68,20 @@ describe('cloud schema routes', () => {
         expect(body.fields[0].name).toBe('containerName')
     })
 
+    test('returns Azure database schema when the adapter is registered', async () => {
+        const app = appWithRoutes([mockAdapter('azure', {
+            service: 'database',
+            schema: azureDatabaseSchema,
+        })])
+        const res = await app.request('/api/clouds/azure/services/database/schema')
+        const body = await res.json()
+
+        expect(res.status).toBe(200)
+        expect(body.cloud).toBe('azure')
+        expect(body.service).toBe('database')
+        expect(body.displayName).toBe('Cosmos DB')
+    })
+
     test('keeps GCP as coming soon without schema', async () => {
         const res = await appWithRoutes().request('/api/clouds/gcp/services/storage/schema')
 
@@ -100,6 +115,28 @@ describe('cloud schema routes', () => {
         expect(res.status).toBe(200)
         expect(body.objects).toHaveLength(1)
         expect(body.objects[0].name).toBe('object.txt')
+    })
+
+    test('lists Cosmos containers through the cloud database adapter', async () => {
+        const app = appWithRoutes([mockAdapter('azure', {
+            service: 'database',
+            schema: azureDatabaseSchema,
+            listCosmosContainers: async (databaseId: string): Promise<CosmosContainer[]> => [{
+                id: 'items',
+                name: 'items',
+                databaseId,
+                partitionKeyPath: '/id',
+                createdAt: null,
+                metadata: {},
+            }],
+        })])
+
+        const res = await app.request('/api/clouds/azure/services/database/resources/appdb/containers')
+        const body = await res.json()
+
+        expect(res.status).toBe(200)
+        expect(body[0].databaseId).toBe('appdb')
+        expect(body[0].name).toBe('items')
     })
 
     test('normalizes runtime unavailable errors', async () => {

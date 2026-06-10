@@ -12,6 +12,7 @@ import {ResourceInspector} from '@/components/ResourceInspector'
 import {ResourceTable} from '@/components/ResourceTable'
 import {StorageObjectBrowser} from '@/components/StorageObjectBrowser'
 import {ComputePanel, LaunchInstanceForm} from '@/components/ComputePanel'
+import {CosmosNoSqlPanel} from '@/components/CosmosNoSqlPanel'
 import {NetworkingPanel} from '@/components/NetworkingPanel'
 import {capabilityEnabled, capabilityFor, capabilitySummary, normalizeCapabilities, withRuntimeState} from '@/lib/capabilities'
 import type {CloudProvider, CloudServiceType, CloudStatus} from '@/types/cloud'
@@ -225,6 +226,9 @@ export function DynamicResourceView({cloud, service, cloudStatus, statusLoading 
             {service === 'networking' && (
                 <NetworkingPanel cloud={cloud} resource={activeSelected} runtimeReachable={runtimeReachable}/>
             )}
+            {service === 'database' && cloud === 'azure' && (
+                <CosmosNoSqlPanel cloud={cloud} resource={activeSelected} runtimeReachable={runtimeReachable}/>
+            )}
         </div>
     )
 }
@@ -249,6 +253,7 @@ function CapabilityStrip({capabilities}: {capabilities: ReturnType<typeof normal
 function resourceCreateLabel(schema: ServiceSchema): string {
     if (schema.cloud === 'aws' && schema.service === 'storage') return 'Create bucket'
     if (schema.cloud === 'azure' && schema.service === 'storage') return 'Create container'
+    if (schema.cloud === 'azure' && schema.service === 'database') return 'Create database'
     return 'Create resource'
 }
 

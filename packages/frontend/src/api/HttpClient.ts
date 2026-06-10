@@ -74,7 +74,13 @@ function httpErrorMessage(
 function apiErrorMessage(body: unknown): string | null {
   if (!body || typeof body !== "object") return null;
   const value = (body as { message?: unknown; error?: unknown }).message ?? (body as { error?: unknown }).error;
-  return typeof value === "string" && value.trim() ? value : null;
+  if (typeof value !== "string" || !value.trim()) return null;
+
+  const detail = (body as { detail?: unknown }).detail;
+  if (typeof detail === "string" && detail.trim() && detail.trim() !== value.trim()) {
+    return `${value.trim()}: ${detail.trim()}`;
+  }
+  return value.trim();
 }
 
 function apiErrorCode(body: unknown): string | null {

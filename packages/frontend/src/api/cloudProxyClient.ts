@@ -6,7 +6,7 @@ import type {
   CloudServiceType,
   CloudStatus,
 } from "@/types/cloud";
-import type { CloudResource, StorageObjectList } from "@/types/resource";
+import type { CloudResource, CosmosContainer, CosmosItem, CosmosQueryResult, StorageObjectList } from "@/types/resource";
 import type { ServiceSchema } from "@/types/schema";
 
 type CloudPathParams = Record<string, string>;
@@ -188,6 +188,104 @@ export async function copyStorageObject(
   );
 }
 
+export async function listCosmosContainers(
+  cloud: CloudProvider,
+  databaseId: string,
+  signal?: AbortSignal,
+): Promise<CosmosContainer[]> {
+  const res = await apiClient.call<CosmosContainer[]>(
+    apiEndpointKeys.clouds.database.cosmos.containers.list,
+    requestOptions(cloud, "database", { signal }),
+    databasePathParams(cloud, databaseId),
+  );
+  return res.data;
+}
+
+export async function createCosmosContainer(
+  cloud: CloudProvider,
+  databaseId: string,
+  values: Record<string, unknown>,
+  signal?: AbortSignal,
+): Promise<CosmosContainer> {
+  const res = await apiClient.call<CosmosContainer, Record<string, unknown>>(
+    apiEndpointKeys.clouds.database.cosmos.containers.create,
+    requestOptions(cloud, "database", { signal, body: values }),
+    databasePathParams(cloud, databaseId),
+  );
+  return res.data;
+}
+
+export async function deleteCosmosContainer(
+  cloud: CloudProvider,
+  databaseId: string,
+  containerId: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  await apiClient.call<void>(
+    apiEndpointKeys.clouds.database.cosmos.containers.delete,
+    requestOptions(cloud, "database", { signal }),
+    { ...databasePathParams(cloud, databaseId), containerId },
+  );
+}
+
+export async function listCosmosItems(
+  cloud: CloudProvider,
+  databaseId: string,
+  containerId: string,
+  signal?: AbortSignal,
+): Promise<CosmosItem[]> {
+  const res = await apiClient.call<CosmosItem[]>(
+    apiEndpointKeys.clouds.database.cosmos.items.list,
+    requestOptions(cloud, "database", { signal }),
+    { ...databasePathParams(cloud, databaseId), containerId },
+  );
+  return res.data;
+}
+
+export async function upsertCosmosItem(
+  cloud: CloudProvider,
+  databaseId: string,
+  containerId: string,
+  document: Record<string, unknown>,
+  signal?: AbortSignal,
+): Promise<CosmosItem> {
+  const res = await apiClient.call<CosmosItem, Record<string, unknown>>(
+    apiEndpointKeys.clouds.database.cosmos.items.upsert,
+    requestOptions(cloud, "database", { signal, body: document }),
+    { ...databasePathParams(cloud, databaseId), containerId },
+  );
+  return res.data;
+}
+
+export async function deleteCosmosItem(
+  cloud: CloudProvider,
+  databaseId: string,
+  containerId: string,
+  itemId: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  await apiClient.call<void>(
+    apiEndpointKeys.clouds.database.cosmos.items.delete,
+    requestOptions(cloud, "database", { signal }),
+    { ...databasePathParams(cloud, databaseId), containerId, itemId },
+  );
+}
+
+export async function queryCosmosItems(
+  cloud: CloudProvider,
+  databaseId: string,
+  containerId: string,
+  query: string,
+  signal?: AbortSignal,
+): Promise<CosmosQueryResult> {
+  const res = await apiClient.call<CosmosQueryResult, { query: string }>(
+    apiEndpointKeys.clouds.database.cosmos.items.query,
+    requestOptions(cloud, "database", { signal, body: { query } }),
+    { ...databasePathParams(cloud, databaseId), containerId },
+  );
+  return res.data;
+}
+
 function requestOptions<TBody = unknown>(
   cloud: CloudProvider,
   service: string,
@@ -210,4 +308,11 @@ function storagePathParams(
   resourceId: string,
 ): CloudPathParams {
   return { cloud, id: resourceId };
+}
+
+function databasePathParams(
+  cloud: CloudProvider,
+  databaseId: string,
+): CloudPathParams {
+  return { cloud, id: databaseId };
 }

@@ -28,6 +28,21 @@ export const apiEndpointKeys = {
         copy: "clouds.services.storage.objects.copy",
       },
     },
+    database: {
+      cosmos: {
+        containers: {
+          list: "clouds.services.database.cosmos.containers.list",
+          create: "clouds.services.database.cosmos.containers.create",
+          delete: "clouds.services.database.cosmos.containers.delete",
+        },
+        items: {
+          list: "clouds.services.database.cosmos.items.list",
+          upsert: "clouds.services.database.cosmos.items.upsert",
+          delete: "clouds.services.database.cosmos.items.delete",
+          query: "clouds.services.database.cosmos.items.query",
+        },
+      },
+    },
   },
   aws: {
     s3: {
@@ -292,6 +307,62 @@ export const endpointRegistry: EndpointRegistry = new Map([
     apiEndpointKeys.clouds.storage.objects.copy,
     {
       path: "/clouds/:cloud/services/storage/resources/:id/object/copy",
+      method: "POST",
+      telemetry: { service: "cloud-proxy" },
+    },
+  ],
+  [
+    apiEndpointKeys.clouds.database.cosmos.containers.list,
+    {
+      path: "/clouds/:cloud/services/database/resources/:id/containers",
+      method: "GET",
+      telemetry: { service: "cloud-proxy" },
+    },
+  ],
+  [
+    apiEndpointKeys.clouds.database.cosmos.containers.create,
+    {
+      path: "/clouds/:cloud/services/database/resources/:id/containers",
+      method: "POST",
+      telemetry: { service: "cloud-proxy" },
+    },
+  ],
+  [
+    apiEndpointKeys.clouds.database.cosmos.containers.delete,
+    {
+      path: "/clouds/:cloud/services/database/resources/:id/containers/:containerId",
+      method: "DELETE",
+      telemetry: { service: "cloud-proxy" },
+    },
+  ],
+  [
+    apiEndpointKeys.clouds.database.cosmos.items.list,
+    {
+      path: "/clouds/:cloud/services/database/resources/:id/containers/:containerId/items",
+      method: "GET",
+      telemetry: { service: "cloud-proxy" },
+    },
+  ],
+  [
+    apiEndpointKeys.clouds.database.cosmos.items.upsert,
+    {
+      path: "/clouds/:cloud/services/database/resources/:id/containers/:containerId/items",
+      method: "POST",
+      telemetry: { service: "cloud-proxy" },
+    },
+  ],
+  [
+    apiEndpointKeys.clouds.database.cosmos.items.delete,
+    {
+      path: "/clouds/:cloud/services/database/resources/:id/containers/:containerId/items/:itemId",
+      method: "DELETE",
+      telemetry: { service: "cloud-proxy" },
+    },
+  ],
+  [
+    apiEndpointKeys.clouds.database.cosmos.items.query,
+    {
+      path: "/clouds/:cloud/services/database/resources/:id/containers/:containerId/query",
       method: "POST",
       telemetry: { service: "cloud-proxy" },
     },

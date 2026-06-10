@@ -89,7 +89,9 @@ function CloudServiceNav() {
             <span className="nav-label">Cloud Services · {cloudLabel}</span>
             {CLOUD_SERVICE_ITEMS.map((service) => {
                 const Icon = CLOUD_SERVICE_ICONS[service.name]
-                const available = service.name === 'storage' || ((service.name === 'k8s' || service.name === 'database' || service.name === 'compute' || service.name === 'networking') && cloud === 'aws')
+                const available = service.name === 'storage'
+                    || ((service.name === 'database') && (cloud === 'aws' || cloud === 'azure'))
+                    || ((service.name === 'k8s' || service.name === 'compute' || service.name === 'networking') && cloud === 'aws')
                 if (service.route && available) {
                     return <NavItem key={service.name} to={`/cloud-explorer/${cloud}/${service.route}`} icon={Icon} label={service.label}/>
                 }
