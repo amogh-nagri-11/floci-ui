@@ -41,6 +41,7 @@ import type {
   ResourceActionName,
   ServiceSchema,
 } from "@/types/schema";
+import { CosmosNoSqlPanel } from "@/components/CosmosNoSqlPanel";
 import { ServerlessPanel } from "@/components/ServerlessPanel";
 
 interface DynamicResourceViewProps {
@@ -409,6 +410,13 @@ export function DynamicResourceView({
           runtimeReachable={runtimeReachable}
         />
       )}
+      {service === "database" && cloud === "azure" && (
+        <CosmosNoSqlPanel
+          cloud={cloud}
+          resource={activeSelected}
+          runtimeReachable={canUseRuntime}
+        />
+      )}
     </div>
   );
 }
@@ -468,6 +476,8 @@ function resourceCreateLabel(schema: ServiceSchema): string {
     return "Create bucket";
   if (schema.cloud === "azure" && schema.service === "storage")
     return "Create container";
+  if (schema.cloud === "azure" && schema.service === "database")
+    return "Create database";
   return "Create resource";
 }
 

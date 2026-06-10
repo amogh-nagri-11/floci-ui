@@ -45,6 +45,79 @@ export function createCloudRoutes(service: CloudProxyService = createCloudProxyS
         })
     })
 
+    app.get('/:cloud/services/database/resources/:id/containers', async (c) => {
+        const cloud = c.req.param('cloud') as CloudProvider
+        if (!isCloudProvider(cloud)) return c.json({error: 'Unknown cloud'}, 404)
+
+        return withRuntime(c, async () => {
+            const containers = await service.listCosmosContainers(cloud, c.req.param('id'))
+            return c.json(containers)
+        })
+    })
+
+    app.post('/:cloud/services/database/resources/:id/containers', async (c) => {
+        const cloud = c.req.param('cloud') as CloudProvider
+        if (!isCloudProvider(cloud)) return c.json({error: 'Unknown cloud'}, 404)
+
+        return withRuntime(c, async () => {
+            const values = await c.req.json<Record<string, unknown>>()
+            const container = await service.createCosmosContainer(cloud, c.req.param('id'), {values})
+            return c.json(container, 201)
+        })
+    })
+
+    app.delete('/:cloud/services/database/resources/:id/containers/:containerId', async (c) => {
+        const cloud = c.req.param('cloud') as CloudProvider
+        if (!isCloudProvider(cloud)) return c.json({error: 'Unknown cloud'}, 404)
+
+        return withRuntime(c, async () => {
+            await service.deleteCosmosContainer(cloud, c.req.param('id'), c.req.param('containerId'))
+            return c.json({ok: true})
+        })
+    })
+
+    app.get('/:cloud/services/database/resources/:id/containers/:containerId/items', async (c) => {
+        const cloud = c.req.param('cloud') as CloudProvider
+        if (!isCloudProvider(cloud)) return c.json({error: 'Unknown cloud'}, 404)
+
+        return withRuntime(c, async () => {
+            const items = await service.listCosmosItems(cloud, c.req.param('id'), c.req.param('containerId'))
+            return c.json(items)
+        })
+    })
+
+    app.post('/:cloud/services/database/resources/:id/containers/:containerId/items', async (c) => {
+        const cloud = c.req.param('cloud') as CloudProvider
+        if (!isCloudProvider(cloud)) return c.json({error: 'Unknown cloud'}, 404)
+
+        return withRuntime(c, async () => {
+            const document = await c.req.json<Record<string, unknown>>()
+            const item = await service.upsertCosmosItem(cloud, c.req.param('id'), c.req.param('containerId'), document)
+            return c.json(item, 201)
+        })
+    })
+
+    app.delete('/:cloud/services/database/resources/:id/containers/:containerId/items/:itemId', async (c) => {
+        const cloud = c.req.param('cloud') as CloudProvider
+        if (!isCloudProvider(cloud)) return c.json({error: 'Unknown cloud'}, 404)
+
+        return withRuntime(c, async () => {
+            await service.deleteCosmosItem(cloud, c.req.param('id'), c.req.param('containerId'), c.req.param('itemId'), c.req.query('partitionKey') ?? null)
+            return c.json({ok: true})
+        })
+    })
+
+    app.post('/:cloud/services/database/resources/:id/containers/:containerId/query', async (c) => {
+        const cloud = c.req.param('cloud') as CloudProvider
+        if (!isCloudProvider(cloud)) return c.json({error: 'Unknown cloud'}, 404)
+
+        return withRuntime(c, async () => {
+            const body = await c.req.json<{query?: string}>()
+            const result = await service.queryCosmosItems(cloud, c.req.param('id'), c.req.param('containerId'), body.query ?? '')
+            return c.json(result)
+        })
+    })
+
     app.get('/:cloud/services/:service/resources/:id', async (c) => {
         const cloud = c.req.param('cloud') as CloudProvider
         const serviceType = c.req.param('service') as CloudServiceType
@@ -180,6 +253,15 @@ function normalizeRuntimeError(err: unknown): {
 
     if (message.includes('Cannot reach')) {
         return errorResponse(503, 'runtime_unavailable', 'Runtime unavailable', message)
+    }
+
+    if (message.includes('Cosmos NoSQL request failed on all known routes')) {
+        return errorResponse(
+            502,
+            'cosmos_nosql_unavailable',
+            'Cosmos NoSQL endpoint is not available on the selected Floci-AZ runtime',
+            message,
+        )
     }
 
     if (message.includes('HTTP 501') || message.includes('NotImplemented')) {

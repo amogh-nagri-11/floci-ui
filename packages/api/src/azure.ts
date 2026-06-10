@@ -29,7 +29,10 @@ export class AzureRestRuntimeClient implements AzureRuntimeClient {
         }
 
         if (options.emptyOnNotFound && res.status === 404) return null
-        if (!res.ok) throw new Error(`Azure Blob request failed: HTTP ${res.status}`)
+        if (!res.ok) {
+            const detail = await safeResponseText(res)
+            throw new Error(`Azure runtime request failed: HTTP ${res.status} ${path}${detail ? ` - ${detail}` : ''}`)
+        }
 
         return res
     }
@@ -47,4 +50,12 @@ export const azure = new AzureRestRuntimeClient()
 
 function errorMessage(error: unknown): string {
     return error instanceof Error ? error.message : String(error)
+}
+
+async function safeResponseText(res: Response): Promise<string> {
+    try {
+        return (await res.text()).trim().slice(0, 500)
+    } catch {
+        return ''
+    }
 }

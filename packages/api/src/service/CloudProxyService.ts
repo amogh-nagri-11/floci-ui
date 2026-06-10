@@ -5,6 +5,9 @@ import type {
     CloudServiceDescriptor,
     CloudServiceType,
     CloudStatus,
+    CosmosContainer,
+    CosmosItem,
+    CosmosQueryResult,
     CreateResourceInput,
     ResourceQuery,
     ServiceSchema,
@@ -184,6 +187,48 @@ export class CloudProxyService {
         const adapter = this.requireAdapter(cloud, service)
         if (!adapter.copyObject) throw new Error(`Object copy is not supported for ${cloud}/${service}`)
         await adapter.copyObject(srcResourceId, srcKey, destKey, destResourceId)
+    }
+
+    async listCosmosContainers(cloud: CloudProvider, databaseId: string): Promise<CosmosContainer[]> {
+        const adapter = this.requireAdapter(cloud, 'database')
+        if (!adapter.listCosmosContainers) throw new Error(`Cosmos containers are not supported for ${cloud}/database`)
+        return adapter.listCosmosContainers(databaseId)
+    }
+
+    async createCosmosContainer(cloud: CloudProvider, databaseId: string, input: CreateResourceInput): Promise<CosmosContainer> {
+        const adapter = this.requireAdapter(cloud, 'database')
+        if (!adapter.createCosmosContainer) throw new Error(`Cosmos container creation is not supported for ${cloud}/database`)
+        return adapter.createCosmosContainer(databaseId, input)
+    }
+
+    async deleteCosmosContainer(cloud: CloudProvider, databaseId: string, containerId: string): Promise<void> {
+        const adapter = this.requireAdapter(cloud, 'database')
+        if (!adapter.deleteCosmosContainer) throw new Error(`Cosmos container deletion is not supported for ${cloud}/database`)
+        await adapter.deleteCosmosContainer(databaseId, containerId)
+    }
+
+    async listCosmosItems(cloud: CloudProvider, databaseId: string, containerId: string): Promise<CosmosItem[]> {
+        const adapter = this.requireAdapter(cloud, 'database')
+        if (!adapter.listCosmosItems) throw new Error(`Cosmos items are not supported for ${cloud}/database`)
+        return adapter.listCosmosItems(databaseId, containerId)
+    }
+
+    async upsertCosmosItem(cloud: CloudProvider, databaseId: string, containerId: string, document: Record<string, unknown>): Promise<CosmosItem> {
+        const adapter = this.requireAdapter(cloud, 'database')
+        if (!adapter.upsertCosmosItem) throw new Error(`Cosmos item upsert is not supported for ${cloud}/database`)
+        return adapter.upsertCosmosItem(databaseId, containerId, document)
+    }
+
+    async deleteCosmosItem(cloud: CloudProvider, databaseId: string, containerId: string, itemId: string, partitionKey?: string | null): Promise<void> {
+        const adapter = this.requireAdapter(cloud, 'database')
+        if (!adapter.deleteCosmosItem) throw new Error(`Cosmos item deletion is not supported for ${cloud}/database`)
+        await adapter.deleteCosmosItem(databaseId, containerId, itemId, partitionKey)
+    }
+
+    async queryCosmosItems(cloud: CloudProvider, databaseId: string, containerId: string, query: string): Promise<CosmosQueryResult> {
+        const adapter = this.requireAdapter(cloud, 'database')
+        if (!adapter.queryCosmosItems) throw new Error(`Cosmos query is not supported for ${cloud}/database`)
+        return adapter.queryCosmosItems(databaseId, containerId, query)
     }
 
     private requireAdapter(cloud: CloudProvider, service: CloudServiceType) {

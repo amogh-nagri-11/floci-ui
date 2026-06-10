@@ -5,8 +5,7 @@ export interface CloudResource {
     name: string
     cloud: CloudProvider
     service: CloudServiceType
-    type: 'bucket' | 'container' | 'cluster' | 'db-instance' | 'instance' | 'image' | 'vpc' | 'lambda'
-
+    type: 'bucket' | 'container' | 'cluster' | 'db-instance' | 'cosmos-database' | 'instance' | 'image' | 'vpc' | 'lambda'
     region: string | null
     createdAt: string | null
     status?: string | null
@@ -28,4 +27,28 @@ export interface StorageObject {
 export interface StorageObjectList {
     prefix: string
     objects: StorageObject[]
+}
+
+export interface CosmosContainer {
+    id: string
+    name: string
+    databaseId: string
+    partitionKeyPath: string
+    createdAt: string | null
+    metadata: Record<string, unknown>
+}
+
+export interface CosmosItem {
+    id: string
+    databaseId: string
+    containerId: string
+    partitionKey: string | null
+    etag: string | null
+    timestamp: string | null
+    document: Record<string, unknown>
+}
+
+export interface CosmosQueryResult {
+    items: Array<Record<string, unknown> | string | number | boolean | null>
+    count: number
 }
