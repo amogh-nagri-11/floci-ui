@@ -158,8 +158,8 @@ Current limitations:
 ## Current Cloud Service Status
 
 These percentages describe UI coverage in the current frontend, grouped by the `Cloud Services` navigation model. They
-do not describe backend completeness. Dedicated AWS pages have been removed; active work now belongs in the
-Cloud Explorer and its proxy/adapters.
+do not describe backend completeness. Most dedicated AWS pages have been removed in favor of the Cloud Explorer and
+its proxy/adapters.
 
 | Category | AWS | Azure | GCP | Current UI status |
 |---|---:|---:|---:|---|
@@ -172,7 +172,7 @@ Cloud Explorer and its proxy/adapters.
 | Function | Coming soon | Coming soon | Coming soon | No unified function adapter is currently exposed in the UI. AWS Lambda legacy UI was removed and should be rebuilt through Cloud Explorer contracts. |
 | Events | Coming soon | Coming soon | Coming soon | No unified events adapter is currently exposed in the UI. AWS SNS legacy UI was removed and should be rebuilt through Cloud Explorer contracts. |
 | Observability | Coming soon | Coming soon | Coming soon | No unified observability adapter is currently exposed in the UI. AWS CloudWatch legacy UI and request ingestion were removed from the frontend/backend legacy surface. |
-| Security / Identity | 80% AWS legacy (Secrets Manager) | Coming soon | Coming soon | AWS Secrets Manager has a dedicated page for listing secrets, inspecting metadata, revealing/editing values, creating, and deleting. IAM, KMS, Cognito, and Systems Manager remain placeholders in the UI. |
+| Security / Identity | 80% (Secrets Manager) | Coming soon | Coming soon | AWS Secrets Manager has a dedicated page for listing secrets, inspecting metadata, revealing/editing values, creating, and deleting. IAM, KMS, Cognito, and Systems Manager remain placeholders in the UI. |
 
 Connected Cloud Explorer categories today:
 
@@ -182,7 +182,7 @@ Connected Cloud Explorer categories today:
 - k8s Engine: AWS EKS.
 - Database: AWS RDS and Azure Cosmos DB NoSQL.
 
-AWS-specific legacy pages still available today:
+Dedicated AWS-specific pages today:
 
 - Secrets Manager
 
