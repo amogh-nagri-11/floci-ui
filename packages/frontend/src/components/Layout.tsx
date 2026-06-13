@@ -12,7 +12,8 @@ import {
     Table2,
     Zap,
 } from 'lucide-react'
-import flociLogo from '@/assets/floci.png'
+import flociWhite from '@/assets/floci-white.svg'
+import flociBlack from '@/assets/floci-black.svg'
 import {useTheme} from '@/lib/useTheme'
 import {useQuery} from '@tanstack/react-query'
 import {getCloudStatus} from '@/api/cloudProxyClient'
@@ -98,13 +99,8 @@ export function Layout() {
         <div className="app">
             <aside className="sidebar">
                 <div className="brand">
-                    <div className="brand-mark">
-                        <img src={flociLogo} alt="Floci" style={{width: '100%', height: '100%', objectFit: 'contain'}}/>
-                    </div>
-                    <div>
-                        <h1>Floci</h1>
-                        <p>Local Cloud</p>
-                    </div>
+                    <img className="brand-logo" src={theme === 'dark' ? flociWhite : flociBlack} alt="Floci"/>
+                    <p>Local Cloud</p>
                 </div>
 
                 <nav className="nav">

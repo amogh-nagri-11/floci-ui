@@ -19,11 +19,11 @@
     --text-3: #5c6695;
     --text-nav: #b0b8d8;
 
-    /* Floci gold accent */
-    --accent: #f9a825;
-    --accent-tint: rgba(249, 168, 37, 0.15);
-    --accent-tint-faint: rgba(249, 168, 37, 0.06);
-    --accent-tint-border: rgba(249, 168, 37, 0.22);
+    /* Floci brand indigo (floci.io) */
+    --accent: #7a7fd6;
+    --accent-tint: rgba(122, 127, 214, 0.16);
+    --accent-tint-faint: rgba(122, 127, 214, 0.07);
+    --accent-tint-border: rgba(122, 127, 214, 0.28);
 
     /* Floci indigo interactive */
     --link: #7986cb;
@@ -72,11 +72,11 @@
     --text-3: #6b74a8;
     --text-nav: #4a5296;
 
-    /* Floci gold accent (light) */
-    --accent: #c49000;
-    --accent-tint: rgba(196, 144, 0, 0.12);
-    --accent-tint-faint: rgba(196, 144, 0, 0.06);
-    --accent-tint-border: rgba(196, 144, 0, 0.25);
+    /* Floci brand indigo (floci.io, light) */
+    --accent: #5559a7;
+    --accent-tint: rgba(85, 89, 167, 0.12);
+    --accent-tint-faint: rgba(85, 89, 167, 0.06);
+    --accent-tint-border: rgba(85, 89, 167, 0.25);
 
     /* Floci indigo interactive (light) */
     --link: #3949ab;
@@ -167,13 +167,20 @@ pre,
 
 .brand {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
     padding: 14px 16px;
     border-bottom: 1px solid var(--border);
 }
 
-.brand-mark,
+.brand-logo {
+    width: 100%;
+    max-width: 150px;
+    height: auto;
+    display: block;
+}
+
 .service-icon {
     display: grid;
     place-items: center;
@@ -182,24 +189,8 @@ pre,
     color: var(--accent);
 }
 
-.brand-mark {
-    width: 30px;
-    height: 30px;
-}
-
-.brand h1,
 .brand p {
     margin: 0;
-}
-
-.brand h1 {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-bright);
-    line-height: 1.1;
-}
-
-.brand p {
     font-size: 11px;
     color: var(--text-2);
 }
