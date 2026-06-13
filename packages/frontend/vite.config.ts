@@ -24,7 +24,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 4500,
     host: "0.0.0.0",
     allowedHosts: ["localhost", "127.0.0.1", "floci-ui"],
     watch: {
@@ -32,7 +32,7 @@ export default defineConfig({
     },
     proxy: {
       "/api": {
-        target: process.env.API_TARGET ?? "http://localhost:3001",
+        target: process.env.API_TARGET ?? "http://localhost:4501",
         changeOrigin: true,
       },
     },

@@ -21,5 +21,5 @@ app.route("/api/clouds", clouds);
 app.use("*", serveStatic({ root: "./public" }));
 app.get("*", serveStatic({ path: "./public/index.html" }));
 
-const port = Number(process.env.PORT ?? 3001);
+const port = Number(process.env.PORT ?? 4501);
 export default { port, fetch: app.fetch };

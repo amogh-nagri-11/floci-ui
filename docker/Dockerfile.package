@@ -1,0 +1,23 @@
+# Single-stage runtime image. Nothing is compiled here — the frontend bundle
+# and the API binary are built in CI (see .github/workflows/release.yml) and
+# copied in. Mirrors the floci-io/floci "native-package" approach.
+#
+# Expected build context layout:
+#   public/                       frontend production bundle (arch-independent)
+#   native/${TARGETARCH}/server   bun-compiled API binary, one per arch
+FROM alpine:3
+
+# Automatically set by Docker BuildKit to "amd64" or "arm64".
+ARG TARGETARCH
+
+RUN apk add --no-cache ca-certificates libstdc++
+
+WORKDIR /app
+
+COPY --chmod=755 native/${TARGETARCH}/server ./server
+COPY public/ ./public/
+
+ENV PORT=4500
+EXPOSE 4500
+
+CMD ["./server"]

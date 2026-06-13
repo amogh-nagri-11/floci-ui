@@ -1,16 +1,19 @@
-.PHONY: up down logs build push dev dev-build dev-down dev-logs dev-api dev-frontend install
+.PHONY: up up-multicloud down logs build push dev dev-build dev-down dev-logs dev-api dev-frontend install
 
 up:
 	docker compose up -d
 
+up-multicloud:
+	docker compose --profile multicloud up -d
+
 down:
-	docker compose down
+	docker compose --profile multicloud down
 
 logs:
 	docker compose logs -f
 
 build:
-	docker build -t floci/floci-ui:latest .
+	docker build -f docker/Dockerfile -t floci/floci-ui:latest .
 
 push: build
 	docker push floci/floci-ui:latest
@@ -20,16 +23,16 @@ install:
 	cd packages/api && ~/.bun/bin/bun install
 
 dev-build:
-	docker compose -f docker-compose.dev.yml build
+	docker compose build
 
 dev:
-	docker compose -f docker-compose.dev.yml up
+	docker compose up
 
 dev-down:
-	docker compose -f docker-compose.dev.yml down
+	docker compose down
 
 dev-logs:
-	docker compose -f docker-compose.dev.yml logs -f
+	docker compose logs -f
 
 dev-api:
 	cd packages/api && ~/.bun/bin/bun run --watch src/index.ts

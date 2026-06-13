@@ -10,9 +10,9 @@ services:
       - ./packages/frontend/tsconfig.json:/app/tsconfig.json
       - ./packages/frontend/tsconfig.node.json:/app/tsconfig.node.json
     ports:
-      - "3000:3000"
+      - "4500:4500"
     environment:
-      API_TARGET: http://floci-api:3001
+      API_TARGET: http://floci-api:4501
       VITE_USE_POLLING: "true"
     depends_on:
       - floci-api
@@ -26,7 +26,7 @@ services:
     volumes:
       - ./packages/api/src:/app/src
     ports:
-      - "3001:3001"
+      - "4501:4501"
     environment:
       FLOCI_ENDPOINT: http://floci:4566
       FLOCI_AZURE_ENDPOINT: http://floci-az:4577
@@ -35,12 +35,9 @@ services:
       AWS_SECRET_ACCESS_KEY: test
       FLOCI_GCP_ENDPOINT: http://floci-gcp:4588
       FLOCI_GCP_PROJECT: floci-local
-      PORT: "3001"
+      PORT: "4501"
     depends_on:
       - floci
-      - floci-az
-      - floci-gcp
-      - floci-seed
     networks:
       - floci_default
 
@@ -59,8 +56,11 @@ services:
         aliases:
           - localhost.floci.io
 
+  # Multi-cloud emulators — enabled with the "multicloud" profile:
+  #   docker compose --profile multicloud up
   floci-az:
     image: floci/floci-az
+    profiles: ["multicloud"]
     ports:
       - "4577:4577"
     networks:
@@ -68,6 +68,7 @@ services:
 
   floci-gcp:
     image: floci/floci-gcp
+    profiles: ["multicloud"]
     ports:
       - "4588:4588"
     networks:
@@ -75,6 +76,7 @@ services:
 
   floci-seed:
     image: floci/floci-gcp
+    profiles: ["multicloud"]
     command: ["/bin/sh", "/etc/floci/init/seed-clouds.sh"]
     volumes:
       - ./init:/etc/floci/init:ro
@@ -92,4 +94,3 @@ services:
 networks:
   floci_default:
     name: floci_default
-    # external: true
