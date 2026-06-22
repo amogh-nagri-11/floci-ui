@@ -7,6 +7,7 @@ import {AwsStorageAdapter} from './adapter-aws/AwsStorageAdapter'
 import {AzureDatabaseAdapter} from './adapter-azure/AzureDatabaseAdapter'
 import {AzureStorageAdapter} from './adapter-azure/AzureStorageAdapter'
 import {GcpStorageAdapter} from './adapter-gcp/GcpStorageAdapter'
+import {GcpCloudFunctionsAdapter} from './adapter-gcp/GcpCloudFunctionsAdapter'
 import {CloudProxyService} from './service/CloudProxyService'
 import {AzureServerlessAdapter} from './adapter-azure/AzureServerlessAdapter'
 import {AwsServerlessAdapter} from './adapter-aws/AwsServerlessAdapter'
@@ -35,6 +36,7 @@ export function createCloudProxyService(accountId?: string | null): CloudProxySe
         new AzureStorageAdapter(),
         new AzureDatabaseAdapter(),
         new GcpStorageAdapter(),
+        new GcpCloudFunctionsAdapter(),
         new AzureServerlessAdapter(),
     ])
 

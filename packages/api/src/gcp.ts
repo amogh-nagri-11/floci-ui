@@ -6,6 +6,10 @@ export function gcpProject(): string {
     return process.env.FLOCI_GCP_PROJECT ?? 'floci-local'
 }
 
+export function gcpLocation(): string {
+    return process.env.FLOCI_GCP_LOCATION ?? 'us-central1'
+}
+
 export async function checkGcpRuntime(endpoint: string = gcpEndpoint()): Promise<void> {
     try {
         await globalThis.fetch(endpoint, {method: 'GET'})
