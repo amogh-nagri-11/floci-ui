@@ -48,6 +48,7 @@ interface GcpFunction {
         timeoutSeconds?: number
         service?: string
         revision?: string
+        allTrafficOnLatestRevision?: boolean
     }
 }
 
@@ -167,7 +168,9 @@ function toResource(fn: GcpFunction): CloudResource {
             availableMemory: serviceConfig.availableMemory,
             timeoutSeconds: serviceConfig.timeoutSeconds,
             uri: serviceConfig.uri ?? fn.url,
+            service: serviceConfig.service,
             revision: serviceConfig.revision,
+            allTrafficOnLatestRevision: serviceConfig.allTrafficOnLatestRevision,
             updateTime: fn.updateTime,
             labels: fn.labels,
         },
